@@ -1,33 +1,36 @@
 ---
-name: xiaohongshu-search
+name: xiaohongshu-tool
 description: 小红书运营全链路数据工具｜关键词监控+爆款挖掘+竞品分析+KOL筛选+趋势洞察，用数据驱动小红书流量增长，告别盲目创作
 license: MIT
 metadata:
   openclaw:
     type: command
     runtime: "nodejs@16+"
-    entrypoint: "scripts/search.js"
-    version: "1.0.0"
+    entrypoint:
+      search: "scripts/xiaohongshu-search.js"
+      detail: "scripts/xiaohongshu-detail.js"
+    version: "1.0.1"
     requires:
       bins: ["node"]
       env: ["GUAIKEI_API_TOKEN"]
+    env_desc:
+      GUAIKEI_API_TOKEN: "小红书数据API访问令牌"
     keywords:
       [
         "小红书",
-        "竞品分析",
         "爆款笔记",
-        "KOL营销",
         "市场调研",
         "数据挖掘",
+        "趋势监控",
+        "竞品分析",
+        "KOL营销",
         "流量增长",
         "用户画像",
-        "趋势监控",
       ]
     examples:
-      - "搜索近7天'露营装备'的热门小红书笔记"
-      - "分析一下博主'XXX'的粉丝画像和互动率"
-      - "监控'早春穿搭'这个关键词的搜索结果"
-      - "追踪竞品品牌'XX'近一周小红书笔记数据"
+      - "搜索'露营装备'的热门小红书笔记: node scripts/xiaohongshu-search.js 露营装备 --type 1 --sort 2 --limit 10"
+      - "分析这篇笔记的评论区情绪: node scripts/xiaohongshu-detail.js 'https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy'"
+      - "监控'早春穿搭'关键词(最新排序+图文类型): node scripts/xiaohongshu-search.js --keyword '早春穿搭' --type 2 --sort 1"
 ---
 
 # 📊 小红书商业洞察与竞品分析助手
@@ -60,34 +63,38 @@ metadata:
 
 ### 2.2 基础语法
 
+#### 2.2.1 小红书关键词搜索
+
 ```bash
-# 语法：node scripts/search.js [关键词] [选项]
+# 基础语法
+node scripts/xiaohongshu-search.js <关键词> [选项]
+
+# 完整选项说明
+--keyword <关键词>: 搜索关键词（必填，2-50个汉字，避免特殊符号）
+--type <0/1/2>: 内容类型，0-全部（默认），1-视频，2-图文
+--sort <0-4>: 排序规则，0-综合（默认），1-最新，2-最多点赞，3-最多评论，4-最多收藏
+--limit <1-60>: 返回数量，1-60（默认10）
+--output <json/markdown>: 输出格式（默认json）
+--help/-h: 显示帮助信息
+
+# 示例
+node scripts/xiaohongshu-search.js "露营装备" --sort 2 --limit 20
+node scripts/xiaohongshu-search.js --keyword "早春穿搭" --type 2 --output markdown
 ```
 
-### 2.3 选项说明
-
-- `--type <0>`：搜索类型，0-全部，1-视频，2-图文（默认0）
-- `--sort <0>`：排序依据，0-综合，1-最新，2-最多点赞，3-最多评论，4-最多收藏（默认0）
-- `--limit <10>`：返回数量，1-60（默认10）
-- `--output <json>`：输出格式，json/markdown（默认json）
-
-### 2.4 典型示例
+#### 2.2.2 小红书笔记详情查询
 
 ```bash
-# 示例1：基础搜索(JSON格式)
-node scripts/search.js AI
-# 示例2：带空格的关键词
-node scripts/search.js "AI 教程"
-# 示例3：自定义搜索类型(视频)
-node scripts/search.js AI --type 1
-# 示例4：自定义排序(最多点赞)
-node scripts/search.js "AI 模型" --sort 2
-# 示例5：自定义返回结果数量(20条)
-node scripts/search.js AI --limit 20
-# 示例6：自定义输出格式(Markdown)
-node scripts/search.js "AI 教程" --output markdown
-# 示例7：复杂搜索(图文+最多点赞+20条结果+JSON格式)
-node scripts/search.js --keyword "AI 教程" --type 2 --sort 2 --limit 20 --output json
+# 基础语法
+node scripts/xiaohongshu-detail.js <笔记链接> [选项]
+
+# 选项说明
+--url <笔记链接>: 笔记链接（支持https://www.xiaohongshu.com/explore/xxx 或 http://xhslink.com/m/xxx）
+--help/-h: 显示帮助信息
+
+# 示例
+node scripts/xiaohongshu-detail.js "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
+node scripts/xiaohongshu-detail.js --url "http://xhslink.com/m/xxx"
 ```
 
 ## 3. 数据合规说明
@@ -95,9 +102,11 @@ node scripts/search.js --keyword "AI 教程" --type 2 --sort 2 --limit 20 --outp
 ✅ 仅抓取小红书**公开可见**内容，无隐私数据泄露风险
 ✅ 数据仅用于商业分析参考，需遵守小红书平台使用条款
 ✅ 所有输出数据均做脱敏处理，不涉及用户个人信息
+✅ 本工具依赖第三方 API 进行数据获取。数据仅供参考，第三方服务可能存在不稳定或接口变更的情况。请勿用于高频爬虫或侵犯用户隐私的场景。
 
 ## 4. 技术说明（OpenClaw 适配）
 
 - 运行环境：Node.js 16+，需提前配置 `GUAIKEI_API_TOKEN` 环境变量
 - 数据输出格式：支持JSON/Markdown（按需返回）
 - 触发方式：支持自然语言指令直接触发，无需固定语法，容错率高
+- 异常处理：所有请求均有重试机制

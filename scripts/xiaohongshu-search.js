@@ -2,7 +2,7 @@
 
 const utils = require("../lib/utils");
 const key = require("../lib/key");
-const xiaohongshu = require("../lib/xiaohongshu");
+const search = require("../lib/search");
 const fs = require("fs");
 const path = require("path");
 
@@ -11,20 +11,20 @@ const path = require("path");
  */
 function printHelp() {
   console.log(`
-用法: node scripts/search.js <关键词> [选项]
+用法: node scripts/xiaohongshu-search.js <关键词> [选项]
 
 选项:
   --keyword \t<关键词> \t搜索关键词
-  --type \t<类型> \t搜索类型, 0: 全部(默认), 1: 视频, 2: 图文
-  --sort \t<排序> \t排序依据, 0: 综合(默认), 1: 最新, 2: 最多点赞, 3: 最多评论, 4: 最多收藏
+  --type \t<类型> \t内容类型, 0: 全部(默认), 1: 视频, 2: 图文
+  --sort \t<排序> \t排序规则, 0: 综合(默认), 1: 最新, 2: 最多点赞, 3: 最多评论, 4: 最多收藏
   --limit \t<数量> \t搜索数量 (默认 10, 最大 60)
   --output \t<格式> \t输出格式, json, markdown (默认 json)
   --help \t显示帮助信息
 
-示例1: node scripts/search.js AI
-示例2: node scripts/search.js "AI 模型"
-示例3: node scripts/search.js --keyword AI --type 0 --sort 0 --limit 10 --output json
-示例4: node scripts/search.js --keyword "AI 模型" --type 1 --sort 2 --limit 20 --output markdown
+示例1: node scripts/xiaohongshu-search.js AI
+示例2: node scripts/xiaohongshu-search.js "AI 模型"
+示例3: node scripts/xiaohongshu-search.js --keyword AI --type 0 --sort 0 --limit 10 --output json
+示例4: node scripts/xiaohongshu-search.js --keyword "AI 模型" --type 1 --sort 2 --limit 20 --output markdown
 
 注意: 
   - 关键词建议 2-50 个汉字，避免特殊符号
@@ -71,7 +71,7 @@ async function main() {
       output = args[index + 1] || "json";
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
-      return;
+      process.exit(0);
     } else if (arg.startsWith("--") === false && keyword === "") {
       keyword = arg;
     }
@@ -84,21 +84,16 @@ async function main() {
 
   utils.printBanner();
   utils.printInfo(`原始关键词: ${keyword}`);
-  let isRight = xiaohongshu.notIdealFormat(keyword);
+  let isRight = search.notIdealFormat(keyword);
   if (!isRight) {
     return;
   }
-  keyword = xiaohongshu.sanitizeKeyword(keyword);
+  keyword = search.sanitizeKeyword(keyword);
   utils.printInfo(`清洗后关键词: ${keyword}`);
 
-  [type, sort, limit, output] = xiaohongshu.optionFormat(
-    type,
-    sort,
-    limit,
-    output,
-  );
+  [type, sort, limit, output] = search.optionFormat(type, sort, limit, output);
   utils.printInfo(
-    `搜索类型: ${type}, 排序依据: ${sort}, 数量: ${limit}, 输出格式: ${output}`,
+    `内容类型: ${type}, 排序规则: ${sort}, 数量: ${limit}, 输出格式: ${output}`,
   );
 
   // 幂等性校验： 同一关键词+参数 2 分钟内不重复执行
@@ -119,7 +114,7 @@ async function main() {
   const token = key.apiKey(process.env.GUAIKEI_API_TOKEN);
   let searchTask = null;
   try {
-    const status = await xiaohongshu.createWithRetry(
+    const status = await search.createWithRetry(
       token,
       keyword,
       type,
@@ -133,7 +128,7 @@ async function main() {
     }
     utils.printSuccess(`搜索任务创建成功, 正在搜索中...`);
 
-    searchTask = await xiaohongshu.searchWithRetry(
+    searchTask = await search.searchWithRetry(
       token,
       keyword,
       type,
@@ -167,6 +162,7 @@ async function main() {
       status: "empty",
       keyword: keyword,
       message: "没有找到匹配的视频或图文内容",
+      error_code: "NO_MATCH",
       type: type,
       sort: sort,
       limit: limit,
@@ -190,14 +186,14 @@ async function main() {
     total: searchTask.length,
     timestamp: new Date().toLocaleString(),
     openclaw_metadata: {
-      skill_version: "1.1.1",
+      skill_version: "1.0.1",
       runtime_version: process.versions.node,
       execution_time: Date.now() - startTime,
     },
     results: searchTask,
   };
   if (output === "markdown") {
-    const message = xiaohongshu.formatMessage(keyword, searchTask);
+    const message = search.formatMessage(keyword, searchTask);
     utils.printInfo(message);
     utils.printSuccess(`搜索任务完成, 共返回 ${searchTask.length} 条结果`);
   } else {

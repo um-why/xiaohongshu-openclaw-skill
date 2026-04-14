@@ -1,17 +1,17 @@
 {
-  "name": "xiaohongshu-search",
-  "version": "1.0.0",
+  "name": "xiaohongshu-tool",
+  "version": "1.0.1",
   "description": "小红书运营全链路数据工具｜关键词监控+爆款挖掘+竞品分析+KOL筛选+趋势洞察，用数据驱动小红书流量增长，告别盲目创作",
   "keywords": [
     "小红书",
-    "竞品分析",
     "爆款笔记",
-    "KOL营销",
     "市场调研",
     "数据挖掘",
+    "趋势监控",
+    "竞品分析",
+    "KOL营销",
     "流量增长",
-    "用户画像",
-    "趋势监控"
+    "用户画像"
   ],
   "homepage": "https://github.com/um-why/xiaohongshu-openclaw-skill#readme",
   "bugs": {
@@ -23,5 +23,9 @@
   },
   "license": "MIT",
   "author": "um-why",
-  "main": "scripts/search.js"
+  "main": "scripts/xiaohongshu-search.js",
+  "scripts": {
+    "search": "node scripts/xiaohongshu-search.js",
+    "detail": "node scripts/xiaohongshu-detail.js"
+  }
 }
