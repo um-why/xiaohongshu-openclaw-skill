@@ -1,30 +1,28 @@
 #!/usr/bin/env node
 
-const utils = require("../lib/utils");
-const key = require("../lib/key");
-const search = require("../lib/search");
-const fs = require("fs");
-const path = require("path");
+const constants = require("../config/constants");
+const key = require("../utils/key");
+const log = require("../utils/log");
+const search = require("../api/search");
+const utils = require("../utils/utils");
+const validator = require("../validate/keyword");
 
-/**
- * 打印帮助信息
- */
 function printHelp() {
   console.log(`
-用法: node scripts/xiaohongshu-search.js <关键词> [选项]
+用法: node src/xiaohongshu/search-cli.js <关键词> [选项]
 
 选项:
-  --keyword \t<关键词> \t搜索关键词
-  --type \t<类型> \t内容类型, 0: 全部(默认), 1: 视频, 2: 图文
-  --sort \t<排序> \t排序规则, 0: 综合(默认), 1: 最新, 2: 最多点赞, 3: 最多评论, 4: 最多收藏
-  --limit \t<数量> \t搜索数量 (默认 10, 最大 60)
-  --output \t<格式> \t输出格式, json, markdown (默认 json)
-  --help \t显示帮助信息
+  --keyword -k \t<关键词> \t搜索关键词
+  --type -t \t<类型> \t内容类型, 0: 全部(默认), 1: 视频, 2: 图文
+  --sort -s \t<排序> \t排序规则, 0: 综合(默认), 1: 最新, 2: 最多点赞, 3: 最多评论, 4: 最多收藏
+  --limit -l \t<数量> \t搜索数量 (默认 10, 最大 60)
+  --output -o \t<格式> \t输出格式, json, markdown (默认 json)
+  --help -h \t显示帮助信息
 
-示例1: node scripts/xiaohongshu-search.js AI
-示例2: node scripts/xiaohongshu-search.js "AI 模型"
-示例3: node scripts/xiaohongshu-search.js --keyword AI --type 0 --sort 0 --limit 10 --output json
-示例4: node scripts/xiaohongshu-search.js --keyword "AI 模型" --type 1 --sort 2 --limit 20 --output markdown
+示例1: node src/xiaohongshu/search-cli.js AI
+示例2: node src/xiaohongshu/search-cli.js "AI 模型"
+示例3: node src/xiaohongshu/search-cli.js --keyword AI --type 0 --sort 0 --limit 10 --output json
+示例4: node src/xiaohongshu/search-cli.js --keyword "AI 模型" --type 1 --sort 2 --limit 20 --output markdown
 
 注意: 
   - 关键词建议 2-50 个汉字，避免特殊符号
@@ -32,15 +30,6 @@ function printHelp() {
   - 所有参数都会自动清洗和验证
 `);
 }
-
-process.on("SIGTERM", () => {
-  utils.printWarn("OpenClaw 终止任务， 清理临时文件...");
-  const outputPath = path.join(__dirname, "last-search.json");
-  if (fs.existsSync(outputPath)) {
-    fs.unlinkSync(outputPath);
-  }
-  process.exit(0);
-});
 
 async function main() {
   const startTime = Date.now();
@@ -56,23 +45,23 @@ async function main() {
     limit = 10,
     output = "json";
   args.forEach((arg, index) => {
-    if (arg === "--keyword") {
+    if (arg === "--keyword" || arg === "-k") {
       keyword = args[index + 1] || "";
-    } else if (arg === "--type") {
+    } else if (arg === "--type" || arg === "-t") {
       type = args[index + 1] || 0;
       type = Number(type);
-    } else if (arg === "--sort") {
+    } else if (arg === "--sort" || arg === "-s") {
       sort = args[index + 1] || 0;
       sort = Number(sort);
-    } else if (arg === "--limit") {
+    } else if (arg === "--limit" || arg === "-l") {
       limit = args[index + 1] || 10;
       limit = Number(limit);
-    } else if (arg === "--output") {
+    } else if (arg === "--output" || arg === "-o") {
       output = args[index + 1] || "json";
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
-    } else if (arg.startsWith("--") === false && keyword === "") {
+    } else if (arg.startsWith("-") === false && keyword === "") {
       keyword = arg;
     }
   });
@@ -84,37 +73,27 @@ async function main() {
 
   utils.printBanner();
   utils.printInfo(`原始关键词: ${keyword}`);
-  let isRight = search.notIdealFormat(keyword);
+  const isRight = validator.isKeywordValid(keyword);
   if (!isRight) {
     return;
   }
-  keyword = search.sanitizeKeyword(keyword);
+  keyword = validator.cleanKeyword(keyword);
   utils.printInfo(`清洗后关键词: ${keyword}`);
 
-  [type, sort, limit, output] = search.optionFormat(type, sort, limit, output);
+  [type, sort, limit, output] = validator.optionFormat(
+    type,
+    sort,
+    limit,
+    output,
+  );
   utils.printInfo(
     `内容类型: ${type}, 排序规则: ${sort}, 数量: ${limit}, 输出格式: ${output}`,
   );
 
-  // 幂等性校验： 同一关键词+参数 2 分钟内不重复执行
-  const taskId = `${keyword}_${type}_${sort}_${limit}`;
-  const taskLockFile = path.join(__dirname, `.lock_${taskId}`);
-  if (fs.existsSync(taskLockFile)) {
-    const lockTime = fs.statSync(taskLockFile).mtimeMs;
-    if (Date.now() - lockTime < 2 * 60 * 1000) {
-      utils.printError(`同一任务 2 分钟内执行, 避免重复请求 API`);
-      process.exit(1);
-    } else {
-      fs.unlinkSync(taskLockFile);
-    }
-  }
-  // 创建锁文件
-  fs.writeFileSync(taskLockFile, Date.now().toString(), { mode: 0o600 });
-
-  const token = key.apiKey(process.env.GUAIKEI_API_TOKEN);
+  const token = key.skillKey(process.env.GUAIKEI_API_TOKEN);
   let searchTask = null;
   try {
-    const status = await search.createWithRetry(
+    const status = await search.createSearchTask(
       token,
       keyword,
       type,
@@ -123,18 +102,12 @@ async function main() {
     );
     if (status.errcode !== 0) {
       throw new Error(
-        `搜索任务创建失败时, 遇到未知错误, 请反馈给开发者 ${status} - ${Date.now()}`,
+        `搜索任务创建时, 遇到未知错误, 请反馈给开发者 ${status} - ${Date.now()}`,
       );
     }
     utils.printSuccess(`搜索任务创建成功, 正在搜索中...`);
 
-    searchTask = await search.searchWithRetry(
-      token,
-      keyword,
-      type,
-      sort,
-      limit,
-    );
+    searchTask = await search.getSearchTask(token, keyword, type, sort, limit);
   } catch (error) {
     const errorOutput = {
       status: "error",
@@ -150,11 +123,6 @@ async function main() {
     };
     console.log(JSON.stringify(errorOutput, null, 2));
     return;
-  } finally {
-    // 删除锁文件
-    if (fs.existsSync(taskLockFile)) {
-      fs.unlinkSync(taskLockFile);
-    }
   }
   if (!searchTask || !Array.isArray(searchTask) || searchTask.length === 0) {
     utils.printError(`搜索任务没有返回结果, 请稍后重试或联系开发者`);
@@ -186,25 +154,25 @@ async function main() {
     total: searchTask.length,
     timestamp: new Date().toLocaleString(),
     openclaw_metadata: {
-      skill_version: "1.0.1",
+      skill_version: constants.VERSION,
       runtime_version: process.versions.node,
       execution_time: Date.now() - startTime,
     },
     results: searchTask,
   };
   if (output === "markdown") {
-    const message = search.formatMessage(keyword, searchTask);
+    const message = validator.formatMessage(keyword, searchTask);
     utils.printInfo(message);
-    utils.printSuccess(`搜索任务完成, 共返回 ${searchTask.length} 条结果`);
+    utils.printSuccess(`搜索任务完成, 共返回 ${finalOutput.total} 条结果`);
   } else {
     console.log(JSON.stringify(finalOutput, null, 2));
     utils.printSuccess(`搜索任务完成, 共返回 ${finalOutput.total} 条结果`);
   }
 
-  // 保存搜索结果到文件
-  const outputPath = path.join(__dirname, "last-search.json");
-  fs.writeFileSync(outputPath, JSON.stringify(finalOutput, null, 2));
-  utils.printSuccess(`  → 已保存到 ${outputPath}`);
+  await log.taskWrite(
+    `${startTime}_${keyword}_${type}_${sort}_${limit}_search.json`,
+    JSON.stringify(finalOutput, null, 2),
+  );
 }
 
 main().catch((error) => {

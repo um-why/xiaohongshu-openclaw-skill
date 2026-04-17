@@ -2,7 +2,7 @@
  * TOKEN管理模块
  */
 const utils = require("./utils");
-function apiKey(token) {
+function skillKey(token) {
   let isDefault = false;
   if (token == undefined) {
     isDefault = true;
@@ -15,7 +15,7 @@ function apiKey(token) {
   }
   if (isDefault) {
     utils.printError(
-      "未正确设置 GUAIKEI_API_TOKEN 环境变量, 将使用默认值, 可能影响搜索效率或搜索频率受限, 建议升级为私有TOKEN以获得更好的搜索体验",
+      "未正确设置 GUAIKEI_API_TOKEN 环境变量, 将使用默认值, 可能影响技能效率或技能频率受限, 建议升级为私有TOKEN以获得更好的技能体验",
     );
     return "e10adc3949ba59abbe56e057f20f883e";
   } else {
@@ -24,5 +24,5 @@ function apiKey(token) {
 }
 
 module.exports = {
-  apiKey,
+  skillKey,
 };

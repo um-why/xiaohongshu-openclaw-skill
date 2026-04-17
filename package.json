@@ -1,6 +1,6 @@
 {
   "name": "xiaohongshu-tool",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "小红书运营全链路数据工具｜关键词监控+爆款挖掘+竞品分析+KOL筛选+趋势洞察，用数据驱动小红书流量增长，告别盲目创作",
   "keywords": [
     "小红书",
@@ -23,9 +23,9 @@
   },
   "license": "MIT",
   "author": "um-why",
-  "main": "scripts/xiaohongshu-search.js",
+  "main": "src/xiaohongshu/search-cli.js",
   "scripts": {
-    "search": "node scripts/xiaohongshu-search.js",
-    "detail": "node scripts/xiaohongshu-detail.js"
+    "search": "node src/xiaohongshu/search-cli.js",
+    "detail": "node src/xiaohongshu/detail-cli.js"
   }
 }
