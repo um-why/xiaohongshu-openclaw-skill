@@ -19,14 +19,12 @@ async function request(options, data = null) {
               reject(new Error(jsonBody.errmsg || "请求失败"));
               return;
             }
-          } else if (
-            res.statusCode === 401 ||
-            res.statusCode === 407 ||
-            res.statusCode === 403 ||
-            res.statusCode === 410 ||
-            res.statusCode === 408
-          ) {
-            reject(new Error(`GUAIKEI_API_TOKEN 无效, 请检查环境变量`));
+          } else if (res.statusCode === 401 || res.statusCode === 403) {
+            reject(
+              new Error(
+                `GUAIKEI_API_TOKEN 无效, 请检查环境变量 或 联系微信: 13395823479 获取解决方案`,
+              ),
+            );
           } else {
             reject(new Error(`请求失败, 状态码: ${res.statusCode}`));
           }
@@ -51,8 +49,7 @@ async function postJson(path, params, data) {
       "Content-Length": Buffer.byteLength(JSON.stringify(data)),
     },
   };
-  const body = await request(options, JSON.stringify(data));
-  return body;
+  return await request(options, JSON.stringify(data));
 }
 
 async function getJson(path, params) {
@@ -65,8 +62,7 @@ async function getJson(path, params) {
       "Content-Type": "application/json",
     },
   };
-  const body = await request(options);
-  return body;
+  return await request(options);
 }
 
 module.exports = { getJson, postJson };

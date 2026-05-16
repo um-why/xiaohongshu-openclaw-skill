@@ -3,18 +3,22 @@ const path = require("path");
 const utils = require("./utils");
 
 async function taskWrite(filename, content) {
+  const safeFilename = filename.replace(/[\\/:*?"<>|]/g, "_");
   const outputFilename = path.join(
     path.dirname(__filename),
     "..",
     "..",
     "logs",
-    filename,
+    safeFilename,
   );
-  if (!fs.existsSync(path.dirname(outputFilename))) {
-    fs.mkdirSync(path.dirname(outputFilename));
+
+  try {
+    await fs.promises.mkdir(path.dirname(outputFilename), { recursive: true });
+    await fs.promises.writeFile(outputFilename, content);
+    utils.printSuccess(`  → 已保存到 ${outputFilename}`);
+  } catch (error) {
+    utils.printError(`日志写入失败: ${error.message}`);
   }
-  fs.writeFileSync(outputFilename, content);
-  utils.printSuccess(`  → 已保存到 ${outputFilename}`);
 }
 
 module.exports = {

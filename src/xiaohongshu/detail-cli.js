@@ -58,7 +58,7 @@ async function main() {
   const token = key.skillKey(process.env.GUAIKEI_API_TOKEN);
   let detailTask = null;
   try {
-    status = await detail.createDetailTask(token, url);
+    const status = await detail.createDetailTask(token, url);
     if (status.errcode !== 0) {
       throw new Error(
         `详情任务创建时, 遇到未知错误, 请反馈给开发者 ${status} - ${Date.now()}`,

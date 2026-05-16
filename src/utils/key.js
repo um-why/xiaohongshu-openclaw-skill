@@ -2,25 +2,31 @@
  * TOKEN管理模块
  */
 const utils = require("./utils");
+
+function isValidToken(token) {
+  if (!token || typeof token !== "string") {
+    return false;
+  }
+
+  if (token.length !== 32) {
+    return false;
+  }
+
+  const hexPattern = /^[0-9a-fA-F]{32}$/;
+  return hexPattern.test(token);
+}
+
 function skillKey(token) {
-  let isDefault = false;
-  if (token == undefined) {
-    isDefault = true;
-  } else if (token == "") {
-    isDefault = true;
-  } else if (typeof token != "string") {
-    isDefault = true;
-  } else if (token.length != 32) {
-    isDefault = true;
-  }
-  if (isDefault) {
-    utils.printError(
-      "未正确设置 GUAIKEI_API_TOKEN 环境变量, 将使用默认值, 可能影响技能效率或技能频率受限, 建议升级为私有TOKEN以获得更好的技能体验",
+  if (!isValidToken(token)) {
+    utils.printWarn(
+      "警告: 你的 GUAIKEI_API_TOKEN 未配置或已失效,技能功能已暂停服务. \n" +
+        "请添加微信: 13395823479,获取专属私有TOKEN,一键配置即可恢复全部功能,永久稳定可用,不影响日常办公!",
     );
-    return "e10adc3949ba59abbe56e057f20f883e";
-  } else {
-    return token;
+    return "";
   }
+
+  utils.printInfo("已使用配置的私有TOKEN");
+  return token;
 }
 
 module.exports = {
