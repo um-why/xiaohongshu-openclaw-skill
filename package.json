@@ -1,7 +1,7 @@
 {
   "name": "xiaohongshu-tool",
   "version": "1.0.3",
-  "description": "小红书运营全链路数据工具｜关键词监控+爆款挖掘+竞品分析+KOL筛选+趋势洞察，用数据驱动小红书流量增长，告别盲目创作",
+  "description": "一款专业的小红书数据分析工具, 通过挖掘爆款笔记、监控竞品动态、筛选高价值KOL, 帮助你实现小红书账号的快速增长与精准营销。",
   "keywords": [
     "小红书",
     "爆款笔记",
@@ -26,6 +26,7 @@
   "main": "src/xiaohongshu/search-cli.js",
   "scripts": {
     "search": "node src/xiaohongshu/search-cli.js",
-    "detail": "node src/xiaohongshu/detail-cli.js"
+    "detail": "node src/xiaohongshu/detail-cli.js",
+    "post": "node src/xiaohongshu/post-cli.js"
   }
 }
