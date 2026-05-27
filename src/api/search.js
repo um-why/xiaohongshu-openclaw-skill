@@ -12,7 +12,7 @@ const utils = require("../utils/utils");
  * @param {string} keyword - 搜索关键词
  * @param {number} type - 内容类型, 0: 全部, 1: 视频, 2: 图文
  * @param {number} sort - 排序规则, 0: 综合, 1: 最新, 2: 最多点赞, 3: 最多评论, 4: 最多收藏
- * @param {number} limit - 搜索数量, 1-60
+ * @param {number} limit - 搜索数量, 1-10000
  * @returns {Promise<Object>} 搜索任务状态
  * @throws {Error} API调用失败时抛出错误
  */
@@ -40,7 +40,7 @@ async function createSearchTask(token, keyword, type, sort, limit) {
  * @param {string} keyword - 搜索关键词
  * @param {number} type - 内容类型, 0: 全部, 1: 视频, 2: 图文
  * @param {number} sort - 排序规则, 0: 综合, 1: 最新, 2: 最多点赞, 3: 最多评论, 4: 最多收藏
- * @param {number} limit - 搜索数量, 1-60
+ * @param {number} limit - 搜索数量, 1-10000
  * @returns {Promise<Array>} 搜索结果数组
  * @throws {Error} API调用失败时抛出错误
  */
@@ -71,6 +71,9 @@ async function getSearchTask(token, keyword, type, sort, limit) {
               item.user.user_id +
               "?xsec_token=" +
               item.user.xsec_token;
+          } else if (item.user && item.user.user_id) {
+            res.data[i].user.url =
+              "https://www.xiaohongshu.com/user/profile/" + item.user.user_id;
           }
         }
         return res.data;

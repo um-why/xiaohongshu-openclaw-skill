@@ -1,27 +1,23 @@
 const utils = require("../utils/utils");
 
 /**
- * 检查笔记链接是否符合要求
+ * 检查小红书链接是否符合要求
  */
-function isXiaohongshuNoteUrl(url) {
+function isXiaohongshuUrl(url) {
   url = url.trim();
   url = url.replace("http://", "https://");
   if (url.indexOf("https://") !== 0) {
-    utils.printError(`笔记链接必须以 https:// 开头`);
+    utils.printError(`小红书链接必须以 https:// 开头`);
     return false;
   }
   if (url.indexOf(" ") !== -1) {
-    utils.printError(`笔记链接不能包含空格`);
+    utils.printError(`小红书链接不能包含空格`);
     return false;
   }
   if (url.indexOf("https://www.xiaohongshu.com/explore/") !== -1) {
-    if (url.indexOf("?xsec_token=") === -1) {
-      utils.printError(`笔记链接必须包含 xsec_token 参数`);
-      return false;
-    }
+  } else if (url.indexOf("https://www.xiaohongshu.com/user/profile/") !== -1) {
   } else if (url.indexOf("https://xhslink.com/m/") !== -1) {
   } else {
-    utils.printError(`笔记链接格式无效`);
     return false;
   }
   return true;
@@ -36,6 +32,6 @@ function url2Name(url) {
 }
 
 module.exports = {
-  isXiaohongshuNoteUrl,
+  isXiaohongshuUrl,
   url2Name,
 };

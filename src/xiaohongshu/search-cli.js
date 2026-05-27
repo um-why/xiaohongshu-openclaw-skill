@@ -15,12 +15,12 @@ function printHelp() {
   --keyword -k \t<关键词> \t搜索关键词
   --type -t \t<类型> \t内容类型, 0: 全部(默认), 1: 视频, 2: 图文
   --sort -s \t<排序> \t排序规则, 0: 综合(默认), 1: 最新, 2: 最多点赞, 3: 最多评论, 4: 最多收藏
-  --limit -l \t<数量> \t搜索数量 (默认 10, 最大 60)
+  --limit -l \t<数量> \t搜索数量 (默认 20, 最大 10000)
   --output -o \t<格式> \t输出格式, json, markdown (默认 json)
   --help -h \t显示帮助信息
 
-示例1: node src/xiaohongshu/search-cli.js AI
-示例2: node src/xiaohongshu/search-cli.js "AI 模型"
+示例1: node src/xiaohongshu/search-cli.js -k AI
+示例2: node src/xiaohongshu/search-cli.js -k "AI 模型"
 示例3: node src/xiaohongshu/search-cli.js --keyword AI --type 0 --sort 0 --limit 10 --output json
 示例4: node src/xiaohongshu/search-cli.js --keyword "AI 模型" --type 1 --sort 2 --limit 20 --output markdown
 
@@ -42,7 +42,7 @@ async function main() {
   let keyword = "",
     type = 0,
     sort = 0,
-    limit = 10,
+    limit = 20,
     output = "json";
   args.forEach((arg, index) => {
     if (arg === "--keyword" || arg === "-k") {
@@ -54,7 +54,7 @@ async function main() {
       sort = args[index + 1] || 0;
       sort = Number(sort);
     } else if (arg === "--limit" || arg === "-l") {
-      limit = args[index + 1] || 10;
+      limit = args[index + 1] || 20;
       limit = Number(limit);
     } else if (arg === "--output" || arg === "-o") {
       output = args[index + 1] || "json";
@@ -153,7 +153,7 @@ async function main() {
     output_format: output,
     total: searchTask.length,
     timestamp: new Date().toLocaleString(),
-    openclaw_metadata: {
+    skill_metadata: {
       skill_version: constants.VERSION,
       runtime_version: process.versions.node,
       execution_time: Date.now() - startTime,

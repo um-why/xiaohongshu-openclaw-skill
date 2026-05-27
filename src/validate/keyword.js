@@ -40,7 +40,7 @@ function cleanKeyword(keyword) {
 function optionFormat(type, sort, limit, output) {
   type = type || 0;
   sort = sort || 0;
-  limit = limit || 10;
+  limit = limit || 20;
   output = output || "json";
   if (type !== 0 && type !== 1 && type !== 2) {
     utils.printError(`内容类型 ${type} 无效, 请使用 0, 1, 2。 默认值为 0`);
@@ -52,9 +52,9 @@ function optionFormat(type, sort, limit, output) {
     );
     sort = 0;
   }
-  if (limit < 1 || limit > 60) {
-    utils.printError(`搜索数量 ${limit} 无效, 请使用 1-60。 默认值为 10`);
-    limit = 10;
+  if (limit < 1 || limit > 10000) {
+    utils.printError(`搜索数量 ${limit} 无效, 请使用 1-10000。 默认值为 20`);
+    limit = 20;
   }
   if (output !== "json" && output !== "markdown") {
     utils.printError(
