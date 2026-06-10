@@ -15,6 +15,7 @@ function printHelp() {
   --keyword -k \t<关键词> \t搜索关键词
   --type -t \t<类型> \t内容类型, 0: 全部(默认), 1: 视频, 2: 图文
   --sort -s \t<排序> \t排序规则, 0: 综合(默认), 1: 最新, 2: 最多点赞, 3: 最多评论, 4: 最多收藏
+  --time -i \t<时间> \t发布时间, 0: 不限(默认), 1: 一天内, 2: 一周内, 3: 半年内
   --limit -l \t<数量> \t搜索数量 (默认 20, 最大 10000)
   --output -o \t<格式> \t输出格式, json, markdown (默认 json)
   --help -h \t显示帮助信息
@@ -42,6 +43,7 @@ async function main() {
   let keyword = "",
     type = 0,
     sort = 0,
+    time = 0,
     limit = 20,
     output = "json";
   args.forEach((arg, index) => {
@@ -53,6 +55,9 @@ async function main() {
     } else if (arg === "--sort" || arg === "-s") {
       sort = args[index + 1] || 0;
       sort = Number(sort);
+    } else if (arg === "--time" || arg === "-p") {
+      time = args[index + 1] || 0;
+      time = Number(time);
     } else if (arg === "--limit" || arg === "-l") {
       limit = args[index + 1] || 20;
       limit = Number(limit);
@@ -80,9 +85,10 @@ async function main() {
   keyword = validator.cleanKeyword(keyword);
   utils.printInfo(`清洗后关键词: ${keyword}`);
 
-  [type, sort, limit, output] = validator.optionFormat(
+  [type, sort, time, limit, output] = validator.optionFormat(
     type,
     sort,
+    time,
     limit,
     output,
   );
@@ -98,6 +104,7 @@ async function main() {
       keyword,
       type,
       sort,
+      time,
       limit,
     );
     if (status.errcode !== 0) {
@@ -107,7 +114,14 @@ async function main() {
     }
     utils.printSuccess(`搜索任务创建成功, 正在搜索中...`);
 
-    searchTask = await search.getSearchTask(token, keyword, type, sort, limit);
+    searchTask = await search.getSearchTask(
+      token,
+      keyword,
+      type,
+      sort,
+      time,
+      limit,
+    );
   } catch (error) {
     const errorOutput = {
       status: "error",
@@ -116,6 +130,7 @@ async function main() {
       error_code: error.code || "UNKNOWN",
       type: type,
       sort: sort,
+      time: time,
       limit: limit,
       output_format: output,
       timestamp: new Date().toLocaleString(),
@@ -133,6 +148,7 @@ async function main() {
       error_code: "NO_MATCH",
       type: type,
       sort: sort,
+      time: time,
       limit: limit,
       output_format: output,
       timestamp: new Date().toLocaleString(),
@@ -149,6 +165,7 @@ async function main() {
     message: "搜索任务完成",
     type: type,
     sort: sort,
+    time: time,
     limit: limit,
     output_format: output,
     total: searchTask.length,
