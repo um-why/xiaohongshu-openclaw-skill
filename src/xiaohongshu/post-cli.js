@@ -115,7 +115,7 @@ async function main() {
       runtime_version: process.versions.node,
       execution_time: Date.now() - startTime,
     },
-    results: detailTask,
+    results: postTask,
   };
   console.log(JSON.stringify(finalOutput, null, 2));
   utils.printSuccess(`博主信息任务完成, 已返回结果`);
