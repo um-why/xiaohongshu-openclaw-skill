@@ -5,7 +5,7 @@ license: MIT
 metadata:
   type: command
   runtime: "nodejs@16.14.0+"
-  version: "1.0.4"
+  version: "1.0.6"
   requires:
     bins:
       - "node"
