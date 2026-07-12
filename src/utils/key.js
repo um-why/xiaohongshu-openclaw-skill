@@ -12,7 +12,7 @@ function isValidToken(token) {
     return false;
   }
 
-  const hexPattern = /^[0-9a-fA-F]{32}$/;
+  const hexPattern = /^[0-9a-zA-Z]{32}$/;
   return hexPattern.test(token);
 }
 

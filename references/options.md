@@ -15,9 +15,13 @@ node src/xiaohongshu/search-cli.js <关键词> [选项]
 --output -o <json/markdown>: 输出格式（默认json）
 --help -h: 显示帮助信息
 
-# 示例
+# **使用示例**
+
+# 搜索小红书 “露营装备” 最多点赞 20 条笔记
 node src/xiaohongshu/search-cli.js "露营装备" --sort 2 --limit 20
-node src/xiaohongshu/search-cli.js --keyword "早春穿搭" --type 2 --output markdown
+
+# 搜索 “早春穿搭” 最近一周内发布的小红书图文笔记
+node src/xiaohongshu/search-cli.js --keyword "早春穿搭" --type 2 --time 2
 ```
 
 ## 2. 小红书笔记详情查询
@@ -36,7 +40,7 @@ node src/xiaohongshu/detail-cli.js <小红书笔记链接> [选项]
 2. 短链接：https://xhslink.com/m/xxx（自动兼容，无需手动解析）
 ❌ 错误：链接含空格、无xsec_token的完整链接会直接报错
 
-# 示例
+# **使用示例**
 node src/xiaohongshu/detail-cli.js "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
 node src/xiaohongshu/detail-cli.js --url "http://xhslink.com/m/xxx"
 ```
