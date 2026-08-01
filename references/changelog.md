@@ -1,5 +1,10 @@
 # 技能更新日志
 
+## v1.1.0
+
+- 技能各项细节优化；
+- SKILL.md 针对workbuddy、openclaw等AI工具的优化。
+
 ## v1.0.5 - v1.0.6
 
 - TOKEN正则匹配，错误修正

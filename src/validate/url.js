@@ -1,9 +1,10 @@
 const utils = require("../utils/utils");
 
-/**
- * 检查小红书链接是否符合要求
- */
-function isXiaohongshuUrl(url) {
+function normalizeUrl(url) {
+  if (typeof url !== "string" || url.trim() === "") {
+    utils.printError(`小红书链接不能为空`);
+    return false;
+  }
   url = url.trim();
   url = url.replace("http://", "https://");
   if (url.indexOf("https://") !== 0) {
@@ -14,24 +15,52 @@ function isXiaohongshuUrl(url) {
     utils.printError(`小红书链接不能包含空格`);
     return false;
   }
-  if (url.indexOf("https://www.xiaohongshu.com/explore/") !== -1) {
-  } else if (url.indexOf("https://www.xiaohongshu.com/user/profile/") !== -1) {
-  } else if (url.indexOf("https://xhslink.com/m/") !== -1) {
-  } else {
-    return false;
-  }
   return true;
 }
 
+function isNoteUrl(url) {
+  if (!normalizeUrl(url)) return false;
+  if (url.indexOf("https://www.xiaohongshu.com/explore/") !== -1) {
+    return true;
+  } else if (url.indexOf("https://xhslink.com/m/") !== -1) {
+    return true;
+  } else if (url.indexOf("https://xhslink.cn/m/") !== -1) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function isProfileUrl(url) {
+  if (!normalizeUrl(url)) return false;
+  if (url.indexOf("https://www.xiaohongshu.com/user/profile/") !== -1) {
+    return true;
+  } else if (url.indexOf("https://xhslink.com/m/") !== -1) {
+    return true;
+  } else if (url.indexOf("https://xhslink.cn/m/") !== -1) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function url2Name(url) {
-  url = url.substring(0, url.indexOf("?"));
-  return url
+  if (typeof url !== "string" || url === "") return "unknown";
+  const clean = url.trim();
+  const qIndex = clean.indexOf("?");
+  const base = qIndex >= 0 ? clean.slice(0, qIndex) : clean;
+  const name = base
     .replace(/^https?:\/\//, "")
-    .replace(/www\.xiaohongshu\.com\/explore\/|xhslink\.com\/m\//, "")
-    .replace(/[\/?=&\-]/g, "_");
+    .replace(/www\.xiaohongshu\.com\/explore\//, "note_")
+    .replace(/www\.xiaohongshu\.com\/user\/profile\//, "profile_")
+    .replace(/xhslink\.com\/m\//, "short_")
+    .replace(/xhslink\.cn\/m\//, "short_")
+    .replace(/[\/?=&-]/g, "_");
+  return name || "unknown";
 }
 
 module.exports = {
-  isXiaohongshuUrl,
+  isNoteUrl,
+  isProfileUrl,
   url2Name,
 };

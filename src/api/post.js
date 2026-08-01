@@ -50,6 +50,9 @@ async function getPostTask(token, url, limit) {
         limit,
       });
       if (res.errcode === 0) {
+        if (!Array.isArray(res.data)) {
+          throw new Error(`作品结果格式错误: data 不是数组类型`);
+        }
         return res.data;
       } else {
         throw new Error(`请求错误信息: ${res.errmsg || "请求失败"}`);

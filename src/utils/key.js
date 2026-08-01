@@ -18,9 +18,11 @@ function isValidToken(token) {
 
 function skillKey(token) {
   if (!isValidToken(token)) {
-    utils.printWarn(
-      "警告: 你的 GUAIKEI_API_TOKEN 未配置或已失效,技能功能已暂停服务. \n" +
-        "请添加微信: 13395823479,获取专属私有TOKEN,一键配置即可恢复全部功能,永久稳定可用,不影响日常办公!",
+    utils.printError(
+      "警告: 你的 GUAIKEI_API_TOKEN 未配置或已失效,技能功能已暂停服务. ",
+    );
+    utils.printInfo(
+      "请添加微信: 13395823479,获取专属私有TOKEN,一键配置即可恢复全部功能,永久稳定可用,不影响日常办公!",
     );
     return "";
   }

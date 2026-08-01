@@ -59,6 +59,9 @@ async function getSearchTask(token, keyword, type, sort, time, limit) {
         limit,
       });
       if (res.errcode === 0) {
+        if (!Array.isArray(res.data)) {
+          throw new Error(`搜索结果格式错误: data 不是数组类型`);
+        }
         for (let i = 0; i < res.data.length; i++) {
           const item = res.data[i];
           if (item.id && item.xsec_token) {

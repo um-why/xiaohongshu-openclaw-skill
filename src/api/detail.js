@@ -50,6 +50,9 @@ async function getDetailTask(token, url, limit) {
         limit: limit,
       });
       if (res.errcode === 0) {
+        if (!res.data || typeof res.data !== "object") {
+          throw new Error(`详情结果格式错误: data 不是对象类型`);
+        }
         if (res.data.id && res.data.xsec_token) {
           res.data.url =
             "https://www.xiaohongshu.com/explore/" +
@@ -72,7 +75,6 @@ async function getDetailTask(token, url, limit) {
       } else {
         throw new Error(`请求错误信息: ${res.errmsg || "请求失败"}`);
       }
-      return null;
     },
     constants.QUERY_MAX_ATTEMPTS,
     (attempt, err) => {
