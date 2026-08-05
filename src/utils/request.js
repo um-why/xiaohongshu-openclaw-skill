@@ -2,6 +2,7 @@ const https = require("https");
 const querystring = require("querystring");
 const constants = require("../config/constants");
 const utils = require("./utils");
+const { skillName } = require("./name");
 
 async function request(options, data = null) {
   return new Promise((resolve, reject) => {
@@ -78,6 +79,7 @@ async function postJson(path, params, data) {
   if (!data || typeof data !== "object") {
     throw new Error("data 必须是对象");
   }
+  params.skill_name = skillName();
   const fullPath = `${path}?${querystring.stringify(params)}`;
   const jsonData = JSON.stringify(data);
   const options = {
