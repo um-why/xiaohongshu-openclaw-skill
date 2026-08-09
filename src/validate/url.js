@@ -1,30 +1,26 @@
-const utils = require("../utils/utils");
-
 function normalizeUrl(url) {
   if (typeof url !== "string" || url.trim() === "") {
-    utils.printError(`小红书链接不能为空`);
     return false;
   }
   url = url.trim();
-  url = url.replace("http://", "https://");
-  if (url.indexOf("https://") !== 0) {
-    utils.printError(`小红书链接必须以 https:// 开头`);
+  url = url.replace(/^http:\/\//, "https://");
+  if (!url.startsWith("https://")) {
     return false;
   }
   if (url.indexOf(" ") !== -1) {
-    utils.printError(`小红书链接不能包含空格`);
     return false;
   }
-  return true;
+  return url;
 }
 
 function isNoteUrl(url) {
-  if (!normalizeUrl(url)) return false;
-  if (url.indexOf("https://www.xiaohongshu.com/explore/") !== -1) {
+  url = normalizeUrl(url);
+  if (!url) return false;
+  if (url.startsWith("https://www.xiaohongshu.com/explore/")) {
     return true;
-  } else if (url.indexOf("https://xhslink.com/m/") !== -1) {
+  } else if (url.startsWith("https://xhslink.com/m/")) {
     return true;
-  } else if (url.indexOf("https://xhslink.cn/m/") !== -1) {
+  } else if (url.startsWith("https://xhslink.cn/m/")) {
     return true;
   } else {
     return false;
@@ -32,12 +28,13 @@ function isNoteUrl(url) {
 }
 
 function isProfileUrl(url) {
-  if (!normalizeUrl(url)) return false;
-  if (url.indexOf("https://www.xiaohongshu.com/user/profile/") !== -1) {
+  url = normalizeUrl(url);
+  if (!url) return false;
+  if (url.startsWith("https://www.xiaohongshu.com/user/profile/")) {
     return true;
-  } else if (url.indexOf("https://xhslink.com/m/") !== -1) {
+  } else if (url.startsWith("https://xhslink.com/m/")) {
     return true;
-  } else if (url.indexOf("https://xhslink.cn/m/") !== -1) {
+  } else if (url.startsWith("https://xhslink.cn/m/")) {
     return true;
   } else {
     return false;
@@ -60,6 +57,7 @@ function url2Name(url) {
 }
 
 module.exports = {
+  normalizeUrl,
   isNoteUrl,
   isProfileUrl,
   url2Name,

@@ -23,7 +23,7 @@ const SCHEMA = {
       type: "number",
       default: 10,
       transform: (v) => Number(v),
-      desc: "主页笔记数量, 0-10000",
+      desc: "主页笔记数量, 1-10000",
     },
   },
   positionalKey: "url",
@@ -75,7 +75,8 @@ async function main() {
     );
     process.exit(1);
   }
-  if (!Number.isFinite(limit) || limit <= 0 || limit >= 10000) {
+  url = validator.normalizeUrl(url);
+  if (!Number.isFinite(limit) || limit <= 0 || limit > 10000) {
     limit = 10;
   }
   utils.printInfo(`主页笔记数量限制: ${limit}`);
@@ -106,8 +107,10 @@ async function main() {
       },
       results: null,
     };
-    console.log(JSON.stringify(errorOutput, null, 2));
-    process.exit(1);
+    process.stdout.write(JSON.stringify(errorOutput, null, 2) + "\n", () =>
+      process.exit(1),
+    );
+    return;
   }
   if (!postTask) {
     utils.printError(`主页笔记任务没有返回结果, 请稍后重试或联系开发者`);
@@ -128,8 +131,10 @@ async function main() {
       },
       results: null,
     };
-    console.log(JSON.stringify(emptyOutput, null, 2));
-    process.exit(1);
+    process.stdout.write(JSON.stringify(emptyOutput, null, 2) + "\n", () =>
+      process.exit(1),
+    );
+    return;
   }
   // 输出博主笔记结果
   const finalOutput = {

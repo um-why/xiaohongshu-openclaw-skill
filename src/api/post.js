@@ -49,11 +49,7 @@ async function getPostTask(token, url, limit) {
         url,
         limit,
       });
-      if (res.errcode === 0) {
-        return res.data;
-      } else {
-        throw new Error(`请求错误信息: ${res.errmsg || "请求失败"}`);
-      }
+      return res.data;
     },
     constants.QUERY_MAX_ATTEMPTS,
     (attempt, err) => {

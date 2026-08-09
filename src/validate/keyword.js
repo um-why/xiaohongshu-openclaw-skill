@@ -36,7 +36,10 @@ function isKeywordValid(keyword) {
 function cleanKeyword(keyword) {
   if (typeof keyword !== "string" || keyword.trim() === "") return "";
   keyword = keyword.trim();
-  return keyword.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s.,!?# ，。！？]/g, "");
+  keyword = keyword.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s.,!?# ，。！？]/g, "");
+  keyword = keyword.trim();
+  if (keyword.length === 0) return "";
+  return keyword;
 }
 
 /**
@@ -46,7 +49,7 @@ function optionFormat(type, sort, time, limit) {
   type = type || 0;
   sort = sort || 0;
   time = time || 0;
-  limit = limit || 20;
+  limit = limit || 10;
   if (type !== 0 && type !== 1 && type !== 2) {
     utils.printError(`内容类型 ${type} 无效, 请使用 0, 1, 2。 默认值为 0`);
     type = 0;
@@ -61,7 +64,7 @@ function optionFormat(type, sort, time, limit) {
     utils.printError(`发布时间 ${time} 无效, 请使用 0, 1, 2, 3。 默认值为 0`);
     time = 0;
   }
-  if (limit < 1 || limit >= 10000) {
+  if (limit <= 0 || limit > 10000) {
     utils.printError(`搜索数量 ${limit} 无效, 请使用 1-10000。 默认值为 10`);
     limit = 10;
   }

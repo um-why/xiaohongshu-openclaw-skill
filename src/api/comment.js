@@ -1,5 +1,5 @@
 /**
- * 小红书笔记详情和评论模块
+ * 小红书评论模块
  */
 const constants = require("../config/constants");
 const { postJson, getJson } = require("../utils/request");
@@ -7,20 +7,20 @@ const { withRetry } = require("../utils/retry");
 const utils = require("../utils/utils");
 
 /**
- * 创建小红书笔记详情及评论任务
+ * 创建小红书评论任务
  * @param {string} token - API令牌
  * @param {string} url - 笔记链接
  * @param {number} limit - 评论数量, 1-10000
- * @returns {Promise<Object>} 详情任务状态
+ * @returns  {Promise<Object>} 评论任务状态
  * @throws {Error} API调用失败时抛出错误
  */
-async function createDetailTask(token, url, limit) {
+async function createCommentTask(token, url, limit) {
   return await withRetry(
     async () => {
       return await postJson(
-        "/api/xiaohongshu/detail/url",
+        "/api/xiaohongshu/comment/url",
         { _: Date.now(), token: token },
-        { url: url, limit: limit },
+        { url, limit },
       );
     },
     constants.CREATE_MAX_ATTEMPTS,
@@ -33,39 +33,22 @@ async function createDetailTask(token, url, limit) {
 }
 
 /**
- * 获取小红书笔记详情及评论任务结果
+ * 获取小红书评论任务结果
  * @param {string} token - API令牌
  * @param {string} url - 笔记链接
  * @param {number} limit - 评论数量, 1-10000
- * @returns {Promise<Object>} 详情结果对象
+ * @returns {Promise<Object>} 评论数组
  * @throws {Error} API调用失败时抛出错误
  */
-async function getDetailTask(token, url, limit) {
+async function getCommentTask(token, url, limit) {
   return await withRetry(
     async () => {
-      const res = await getJson("/api/xiaohongshu/detail/info", {
+      const res = await getJson("/api/xiaohongshu/comment/info", {
         _: Date.now(),
         token: token,
-        url: url,
-        limit: limit,
+        url,
+        limit,
       });
-      if (!res.data || typeof res.data !== "object") {
-        throw new Error(`详情结果格式错误: data 不是对象类型`);
-      }
-      if (res.data.id && res.data.xsec_token) {
-        res.data.url =
-          "https://www.xiaohongshu.com/explore/" +
-          res.data.id +
-          "?xsec_token=" +
-          res.data.xsec_token;
-      }
-      if (res.data.user && res.data.user.user_id && res.data.user.xsec_token) {
-        res.data.user.url =
-          "https://www.xiaohongshu.com/user/profile/" +
-          res.data.user.user_id +
-          "?xsec_token=" +
-          res.data.user.xsec_token;
-      }
       return res.data;
     },
     constants.QUERY_MAX_ATTEMPTS,
@@ -78,6 +61,6 @@ async function getDetailTask(token, url, limit) {
 }
 
 module.exports = {
-  createDetailTask,
-  getDetailTask,
+  createCommentTask,
+  getCommentTask,
 };

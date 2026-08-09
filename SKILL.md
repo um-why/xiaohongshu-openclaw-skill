@@ -1,11 +1,11 @@
 ---
 name: xiaohongshu-tool
-description: 小红书运营数据工具｜当用户需要搜索小红书公开笔记、查看某篇笔记详情与评论、或抓取某个博主的公开作品列表时使用，可实现爆款挖掘/竞品分析/KOL筛选/趋势洞察，用数据驱动小红书流量增长，告别盲目创作
+description: 小红书运营数据工具｜当用户需要搜索小红书公开笔记、查看某篇笔记详情与评论、获取单篇笔记评论、或抓取某个博主的公开作品列表时使用，可实现爆款挖掘/竞品分析/KOL筛选/趋势洞察，用数据驱动小红书流量增长，告别盲目创作
 license: MIT
 metadata:
   type: command
   runtime: "nodejs@16.14.0+"
-  version: "1.1.0"
+  version: "1.1.1"
   requires:
     bins:
       - "node"
@@ -80,11 +80,12 @@ metadata:
 
 ## 3. 🚧 能力边界
 
-本技能当前只覆盖 3 类能力：
+本技能当前只覆盖 4 类能力：
 
 1. **关键词搜索**：按关键词搜索小红书公开笔记。
-2. **笔记详情与评论**：根据笔记链接获取详情与评论数据。
+2. **笔记详情**：根据笔记链接获取笔记详情。
 3. **博主作品监控**：根据博主主页链接获取其公开作品列表。
+4. **笔记评论获取**：根据笔记链接单独获取该笔记的评论数据，便于做评论洞察与观点分析。
 
 🛑 本技能不负责：
 
@@ -101,16 +102,17 @@ metadata:
 
 根据用户输入的关键信号，路由到对应脚本：
 
-| 用户输入 / 意图          | 调用脚本                        | 必填输入     | 典型结果                               |
-| ------------------------ | ------------------------------- | ------------ | -------------------------------------- |
-| 查某个关键词的小红书内容 | `src/xiaohongshu/search-cli.js` | `keyword`    | 笔记列表、作者信息、互动信息、跳转链接 |
-| 看某篇笔记的详情和评论   | `src/xiaohongshu/detail-cli.js` | 笔记 URL     | 笔记详情、作者信息、评论内容           |
-| 看某个博主最近发布了什么 | `src/xiaohongshu/post-cli.js`   | 博主主页 URL | 博主公开作品列表                       |
+| 用户输入 / 意图                | 调用脚本                         | 必填输入     | 典型结果                               |
+| ------------------------------ | -------------------------------- | ------------ | -------------------------------------- |
+| 查某个关键词的小红书内容       | `src/xiaohongshu/search-cli.js`  | `keyword`    | 笔记列表、作者信息、互动信息、跳转链接 |
+| 看某篇小红书笔记的详情         | `src/xiaohongshu/detail-cli.js`  | 笔记 URL     | 笔记详情、作者信息                     |
+| 看某个小红书博主最近发布了什么 | `src/xiaohongshu/post-cli.js`    | 博主主页 URL | 博主公开作品列表                       |
+| 看某篇小红书笔记的评论数据     | `src/xiaohongshu/comment-cli.js` | 笔记 URL     | 该笔记的评论内容、评论者信息、互动数据 |
 
 ### 🧭 路由细则
 
 - 用户给的是 **关键词**，没有链接：走 **关键词搜索**。
-- 用户给的是 `https://www.xiaohongshu.com/explore/...` 或可解析到笔记的短链：走 **笔记详情与评论**。
+- 用户给的是 `https://www.xiaohongshu.com/explore/...` 或可解析到笔记的短链：若只关心评论，走 **笔记评论查询**；若要连同笔记详情一起看，走 **笔记详情与评论**。
 - 用户给的是 `https://www.xiaohongshu.com/user/profile/...` 或可解析到主页的短链：走 **博主作品监控**。
 - 如果用户同时给出多个目标，按用户目标拆分执行，不要把不同意图硬塞进一次命令。
 
@@ -129,7 +131,7 @@ metadata:
 - `type`：内容类型，`0` 全部，`1` 视频，`2` 图文。
 - `sort`：排序规则，`0` 综合，`1` 最新，`2` 最多点赞，`3` 最多评论，`4` 最多收藏。
 - `time`：发布时间，`0` 全部，`1` 一天内，`2` 一周内，`3` 半年内。
-- `limit`：返回数量，范围 `1-10000`，默认 `20`。
+- `limit`：返回数量，范围 `1-10000`，默认 `10`。
 
 如果用户只说“帮我看看最近趋势”，优先补问：
 
@@ -170,6 +172,24 @@ metadata:
 - `https://xhslink.com/m/xxx`
 
 如果用户给的是笔记详情链接，不要误走博主脚本，先说明需要主页链接。
+
+### 5.4 💬 笔记评论获取
+
+至少要确认：
+
+- `url`：小红书笔记链接。
+
+可选参数：
+
+- `limit`：评论数量上限；不传时按脚本默认行为执行。
+
+适用链接示例：
+
+- `https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy`
+- `https://xhslink.com/m/xxx`
+
+如果用户给的是博主主页链接，不要误走评论脚本，先指出链接类型不匹配。
+与「笔记详情」的区别：本能力只取评论数据，不返回笔记正文 / 互动详情，适合只想做评论洞察、观点聚类或舆情分析的场景。
 
 **👉 详细选项说明**, 可参阅 [完整选项说明](references/options.md)
 
@@ -235,16 +255,15 @@ node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --
 - 比较不同关键词表现
 - 做趋势洞察和竞品搜集
 
-### 7.2 📰 笔记详情与评论
+### 7.2 📰 笔记详情
 
 ```bash
-node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100
+node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
 ```
 
 适合场景：
 
 - 看某篇爆款笔记的标题、正文、互动数据
-- 拉评论区做观点归纳或情绪分析
 - 分析单篇内容为何有效
 
 ### 7.3 📡 博主作品监控
@@ -258,6 +277,18 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 - 观察竞品博主最近在发什么
 - 看一个账号的发文节奏与主题分布
 - 为 KOL 筛选和竞品分析准备原始数据
+
+### 7.4 💬 笔记评论查询
+
+```bash
+node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100
+```
+
+适合场景：
+
+只拉评论区做观点归纳或情绪分析
+统计某篇笔记的高频评论主题
+识别评论区的主要负面反馈
 
 ## 8. 🚀 对 WorkBuddy / OpenClaw 更友好的使用方式
 
@@ -289,7 +320,71 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 - 不应将返回数据用于违规分发或违法用途。
 - 本技能会依赖第三方 API 服务，请在使用前确认数据外发与授权范围。
 
-## 11. 🎧 支持信息
+## 11. 🚫 反模式与常见问题 FAQ
+
+> 本章帮助你在不联系开发者的情况下，自行判断「是不是用错了」以及「报错时怎么处理」。结构化结果里都带有 `status` 和 `error_code` 字段，下游调用方请**先按 `status` 分支**（`success` / `empty` / `error`），再参考 `error_code` 决定重试还是换输入。
+
+### 11.1 🚫 反模式（以下做法都会导致失败或拿到错误数据）
+
+- **链接类型错配**：把博主主页 `user/profile/...` 传给 `detail-cli.js` / `comment-cli.js`，或把笔记链接 `explore/...` 传给 `post-cli.js`。链接类型不对时接口会返回业务错误。
+- **误信短链类型**：`xhslink.com/m/xxx`、`xhslink.cn/m/xxx` 是不透明的短链，**无法仅凭短链判断它指向笔记还是博主主页**。如果用户给的是短链且结果异常，优先请用户提供完整链接（`explore/` 或 `user/profile/`）。
+- **缺关键输入就硬跑**：没有 `keyword`、没有 `url`，或链接类型不明确时，先追问，不要执行命令。
+- **传脏链接**：带前后空格、用 `http://`（非 `https://`）的链接会被拒绝。需要的话先做 trim、`http→https` 归一。
+- **`limit` 超限被静默降级**：`limit` 上限是 `10000`，写成 `> 10000`（如 `20000`）会被静默降到 `10`，并非「没返回」。
+- **把空结果当成功 / 编造数据**：`search-cli.js` 拿不到结果会按失败（退出码 1）返回；`detail/comment` 返回空数组则视为成功。无论哪种，失败都不要编造结论。
+- **关键词喂 emoji / 纯符号**：`🔥🔥`、`（）【】` 这类会被清洗成空串，触发「关键词无效」拦截。换有意义的文字关键词。
+- **假设失败也会输出成功字段**：失败 JSON 的 `status` 是 `"error"`（或 `"empty"`），`results` 为 `null`；只有成功时 `results` 才有数据。解析 stdout 时务必先看 `status`。
+
+### 11.2 ❓ 常见问题 FAQ（自助排查）
+
+**Q1. 报错 `error_code: 401` 或 `403` 怎么办？**
+
+> 含义：`GUAIKEI_API_TOKEN` 未配置或无效。
+> 自查：①确认运行环境里确实 `export GUAIKEI_API_TOKEN=...` 了（不是只在 shell 配置里写了）；②token 须为 **32 位十六进制**（如 `abcdefghij0123456789abcdefghij12`），核对是否有多余空格或换行；③是否已过期，去 <https://www.guaikei.com> 重新开通。
+
+**Q2. 报错 `error_code: 429` 怎么办？**
+
+> 含义：触发了接口频率限制。
+> 自查：降低调用频率、减小 `--limit`、或稍后重试，不要短时间高频轮询。
+
+**Q3. 报错 `error_code: 500 / 502 / 503` 等服务端错误怎么办？**
+
+> 含义：第三方 API 临时故障。
+> 自查：通常是 transient，等 1–2 分钟重试；若持续出现，再走 §12 联系支持，并附上 `skill_metadata` 里的 `execution_time` 与请求参数。
+
+**Q4. 报错 `error_code: ERRCODE_xxx` 怎么办？**
+
+> 含义：业务层错误（HTTP 200 但 `errcode !== 0`），常见如「笔记已删除 / 不存在 / 无权限」。
+> 自查：换一条确认仍存在的笔记链接；该错误不会随重试变好，不要反复重试同一链接。
+
+**Q5. 报错 `error_code: ETIMEDOUT` 或 `UNKNOWN` 怎么办？**
+
+> 含义：网络超时或无法解析响应。
+> 自查：检查本机网络 / 代理；确认能访问 `guaikei.com`；重试一次；仍失败再联系支持。
+
+**Q6. 提示「小红书链接格式无效」怎么办？**
+
+> 自查：确认链接①以 `https://` 开头；②无前后空格；③是以下之一：`www.xiaohongshu.com/explore/...`、`www.xiaohongshu.com/user/profile/...`、`xhslink.com/m/...`、`xhslink.cn/m/...`。
+
+**Q7. 命令一启动就退出、没输出数据？**
+
+> 自查：多半是 `GUAIKEI_API_TOKEN` 未通过校验（见 Q1）。在运行命令前先 `echo $GUAIKEI_API_TOKEN` 确认变量已注入当前进程。
+
+**Q8. 搜索返回空、但退出码不是 0？**
+
+> 含义：`search-cli.js` 把「无结果」视为失败（退出码 1）。
+> 自查：换更宽泛的关键词、放宽 `--type` / `--time`、或确认关键词不是被清洗成空串的符号（见 11.1）。`detail/comment` 的空数组则视为成功，属正常差异。
+
+**Q9. 设了 `--limit 10000` 却只拿到 10 条？**
+
+> 含义：`limit` 写成了超过 `10000` 的值，被静默降到默认 `10`（见 11.1）。
+> 自查：确认 `--limit` 是 `1–10000` 之间的整数。
+
+**Q10. 下游程序解析 stdout 失败 / 报 `Unexpected end of JSON input`？**
+
+> 自查：失败输出通过 `process.stdout.write(..., () => process.exit(1))` 异步写出后会退出；请确保消费方**等进程退出后再读完整 stdout**，且只取最后一份 JSON（`status` 字段唯一标识这份结果）。不要把 `error`/`empty`/`success` 多份输出拼在一起解析。
+
+## 12. 🎧 支持信息
 
 如需开通 token 或获得使用支持，可优先通过官网处理：
 

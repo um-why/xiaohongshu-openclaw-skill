@@ -58,34 +58,30 @@ async function getSearchTask(token, keyword, type, sort, time, limit) {
         time,
         limit,
       });
-      if (res.errcode === 0) {
-        if (!Array.isArray(res.data)) {
-          throw new Error(`搜索结果格式错误: data 不是数组类型`);
-        }
-        for (let i = 0; i < res.data.length; i++) {
-          const item = res.data[i];
-          if (item.id && item.xsec_token) {
-            res.data[i].url =
-              "https://www.xiaohongshu.com/explore/" +
-              item.id +
-              "?xsec_token=" +
-              item.xsec_token;
-          }
-          if (item.user && item.user.user_id && item.user.xsec_token) {
-            res.data[i].user.url =
-              "https://www.xiaohongshu.com/user/profile/" +
-              item.user.user_id +
-              "?xsec_token=" +
-              item.user.xsec_token;
-          } else if (item.user && item.user.user_id) {
-            res.data[i].user.url =
-              "https://www.xiaohongshu.com/user/profile/" + item.user.user_id;
-          }
-        }
-        return res.data;
-      } else {
-        throw new Error(`请求错误信息: ${res.errmsg || "请求失败"}`);
+      if (!Array.isArray(res.data)) {
+        throw new Error(`搜索结果格式错误: data 不是数组类型`);
       }
+      for (let i = 0; i < res.data.length; i++) {
+        const item = res.data[i];
+        if (item.id && item.xsec_token) {
+          res.data[i].url =
+            "https://www.xiaohongshu.com/explore/" +
+            item.id +
+            "?xsec_token=" +
+            item.xsec_token;
+        }
+        if (item.user && item.user.user_id && item.user.xsec_token) {
+          res.data[i].user.url =
+            "https://www.xiaohongshu.com/user/profile/" +
+            item.user.user_id +
+            "?xsec_token=" +
+            item.user.xsec_token;
+        } else if (item.user && item.user.user_id) {
+          res.data[i].user.url =
+            "https://www.xiaohongshu.com/user/profile/" + item.user.user_id;
+        }
+      }
+      return res.data;
     },
     constants.QUERY_MAX_ATTEMPTS,
     (attempt, err) => {

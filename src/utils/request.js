@@ -22,7 +22,9 @@ async function request(options, data = null) {
               if (jsonBody.errcode === 0) {
                 resolve(jsonBody);
               } else {
-                reject(new Error(jsonBody.errmsg || "请求失败"));
+                const err = new Error(jsonBody.errmsg || "请求失败");
+                err.code = "ERRCODE_" + jsonBody.errcode;
+                reject(err);
                 return;
               }
             } catch (error) {
@@ -34,6 +36,7 @@ async function request(options, data = null) {
             );
             err.nonRetryable = true;
             err.statusCode = res.statusCode;
+            err.code = res.statusCode;
             reject(err);
           } else {
             const err = new Error(`请求失败, 状态码: ${res.statusCode}`);
@@ -42,6 +45,7 @@ async function request(options, data = null) {
               res.statusCode < 500 &&
               res.statusCode !== 429;
             err.statusCode = res.statusCode;
+            err.code = res.statusCode;
             reject(err);
           }
         });

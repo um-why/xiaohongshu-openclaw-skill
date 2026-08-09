@@ -22,7 +22,7 @@
 | 🔍 内容创作选题 | 输入关键词，筛选「最多点赞」笔记，快速找到爆款选题方向        |
 | 🕵️ 品牌竞品监控 | 输入竞品账号链接，分析其互动数据、内容风格，制定差异化策略    |
 | 👥 KOL筛选      | 解析KOL笔记的真实互动率（点赞/评论/收藏），避免数据造假的博主 |
-| 💬 评论分析     | 获取抖音评论详情，分析舆情方向                                |
+| 💬 评论分析     | 获取小红书评论详情，分析舆情方向                              |
 | 📈 市场趋势分析 | 定时监控关键词「最新排序」，捕捉小红书热点风向，提前布局内容  |
 
 **✨ 适用人群**
@@ -39,16 +39,22 @@
 node src/xiaohongshu/search-cli.js --keyword "夏季穿搭"
 ```
 
-### 2.2 小红书笔记详情及评论分析
+### 2.2 小红书笔记详情
 
 ```bash
-node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100
+node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
 ```
 
 ### 2.3 小红书博主作品监控
 
 ```bash
 node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy" --limit 20
+```
+
+### 2.4 小红书笔记评论分析
+
+```bash
+node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100
 ```
 
 **💡 详细选项说明**， 可参阅 [完整选项说明](references/options.md)

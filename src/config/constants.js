@@ -4,5 +4,5 @@ module.exports = {
   CREATE_MAX_ATTEMPTS: 3,
   QUERY_MAX_ATTEMPTS: 20,
   RETRY_INTERVAL: 2000,
-  VERSION: "1.1.0",
+  VERSION: "1.1.1",
 };

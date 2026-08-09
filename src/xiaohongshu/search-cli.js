@@ -99,6 +99,10 @@ async function main() {
   }
   keyword = validator.cleanKeyword(keyword);
   utils.printInfo(`清洗后关键词: ${keyword}`);
+  if (keyword === "") {
+    utils.printError(`关键词不能为空`);
+    process.exit(1);
+  }
 
   [type, sort, time, limit] = validator.optionFormat(type, sort, time, limit);
   utils.printInfo(
@@ -142,8 +146,10 @@ async function main() {
       },
       results: null,
     };
-    console.log(JSON.stringify(errorOutput, null, 2));
-    process.exit(1);
+    process.stdout.write(JSON.stringify(errorOutput, null, 2) + "\n", () =>
+      process.exit(1),
+    );
+    return;
   }
   if (!searchTask || !Array.isArray(searchTask) || searchTask.length === 0) {
     utils.printError(`搜索任务没有返回结果, 请稍后重试或联系开发者`);
@@ -167,8 +173,10 @@ async function main() {
       },
       results: null,
     };
-    console.log(JSON.stringify(emptyOutput, null, 2));
-    process.exit(1);
+    process.stdout.write(JSON.stringify(emptyOutput, null, 2) + "\n", () =>
+      process.exit(1),
+    );
+    return;
   }
 
   // 输出搜索结果
@@ -193,7 +201,9 @@ async function main() {
     results: searchTask,
   };
   console.log(JSON.stringify(finalOutput, null, 2));
-  utils.printSuccess(`搜索任务完成, 共返回 ${finalOutput.total} 条结果`);
+  utils.printSuccess(
+    `搜索任务完成, 共返回 ${finalOutput.results.length} 条结果`,
+  );
 
   await log.taskWrite(
     `${startTime}_${keyword}_${type}_${sort}_${limit}_search.json`,

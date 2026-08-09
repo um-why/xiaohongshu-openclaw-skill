@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const constants = require("../config/constants");
-const detail = require("../api/detail");
+const comment = require("../api/comment");
 const log = require("../utils/log");
 const key = require("../utils/key");
 const utils = require("../utils/utils");
@@ -21,9 +21,9 @@ const SCHEMA = {
       alias: "-l",
       key: "limit",
       type: "number",
-      default: 0,
+      default: 10,
       transform: (v) => Number(v),
-      desc: "评论数量, 0-10000",
+      desc: "评论数量, 1-10000",
     },
   },
   positionalKey: "url",
@@ -31,8 +31,8 @@ const SCHEMA = {
 
 function printHelp() {
   console.error(
-    buildHelp(SCHEMA, "node src/xiaohongshu/detail-cli.js <笔记链接> [选项]", [
-      'node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"',
+    buildHelp(SCHEMA, "node src/xiaohongshu/comment-cli.js <笔记链接> [选项]", [
+      'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"',
     ]) +
       "\n\n注意:\n" +
       "  - 笔记链接是小红书可公开访问的笔记链接\n" +
@@ -74,19 +74,19 @@ async function main() {
     process.exit(1);
   }
   url = validator.normalizeUrl(url);
-  if (!Number.isFinite(limit) || limit < 0 || limit > 10000) {
-    limit = 0;
+  if (!Number.isFinite(limit) || limit <= 0 || limit > 10000) {
+    limit = 10;
   }
   utils.printInfo(`评论数量限制: ${limit}`);
 
   const token = key.skillKey(process.env.GUAIKEI_API_TOKEN);
   if (token === "") process.exit(1);
-  let detailTask = null;
+  let commentTask = null;
   try {
-    await detail.createDetailTask(token, url, limit);
-    utils.printSuccess(`详情任务创建成功, 正在获取中...`);
+    await comment.createCommentTask(token, url, limit);
+    utils.printSuccess(`评论任务创建成功, 正在获取中...`);
 
-    detailTask = await detail.getDetailTask(token, url, limit);
+    commentTask = await comment.getCommentTask(token, url, limit);
   } catch (error) {
     const errorOutput = {
       status: "error",
@@ -94,7 +94,7 @@ async function main() {
       message: error.message,
       timestamp: new Date().toLocaleString(),
       request: {
-        command: "detail",
+        command: "comment",
         url: url,
         limit: limit,
       },
@@ -110,15 +110,15 @@ async function main() {
     );
     return;
   }
-  if (!detailTask) {
-    utils.printError(`详情任务没有返回结果, 请稍后重试或联系开发者`);
+  if (!commentTask) {
+    utils.printError(`评论任务没有返回结果, 请稍后重试或联系开发者`);
     const emptyOutput = {
       status: "empty",
       error_code: "NOT_FOUND",
-      message: "没有找到匹配的笔记及评论内容",
+      message: "没有找到匹配的评论内容",
       timestamp: new Date().toLocaleString(),
       request: {
-        command: "detail",
+        command: "comment",
         url: url,
         limit: limit,
       },
@@ -138,10 +138,10 @@ async function main() {
   const finalOutput = {
     status: "success",
     error_code: "OK",
-    message: "详情任务完成",
+    message: "评论任务完成",
     timestamp: new Date().toLocaleString(),
     request: {
-      command: "detail",
+      command: "comment",
       url: url,
       limit: limit,
     },
@@ -150,13 +150,13 @@ async function main() {
       runtime_version: process.versions.node,
       execution_time: Date.now() - startTime,
     },
-    results: detailTask,
+    results: commentTask,
   };
   console.log(JSON.stringify(finalOutput, null, 2));
-  utils.printSuccess(`详情任务完成, 已返回结果`);
+  utils.printSuccess(`评论任务完成, 已返回结果`);
 
   await log.taskWrite(
-    `${startTime}_${validator.url2Name(url)}_detail.json`,
+    `${startTime}_${validator.url2Name(url)}_comment.json`,
     JSON.stringify(finalOutput, null, 2),
   );
 }
