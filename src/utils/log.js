@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const utils = require("./utils");
 
 async function taskWrite(filename, content) {
@@ -21,16 +22,18 @@ async function taskWrite(filename, content) {
   if (safeFilename === "") {
     safeFilename = `log_${Date.now()}`;
   }
-  const outputFilename = path.join(
-    path.dirname(__filename),
-    "..",
-    "..",
+
+  const dayDir = new Date().toISOString().slice(0, 10);
+  const outputDir = path.join(
+    os.tmpdir(),
+    "xiaohongshu-guaikei",
     "logs",
-    safeFilename,
+    dayDir,
   );
+  const outputFilename = path.join(outputDir, safeFilename);
 
   try {
-    await fs.promises.mkdir(path.dirname(outputFilename), { recursive: true });
+    await fs.promises.mkdir(path.dirname(outputDir), { recursive: true });
     await fs.promises.writeFile(outputFilename, content);
     utils.printSuccess(`  → 已保存到 ${outputFilename}`);
   } catch (error) {

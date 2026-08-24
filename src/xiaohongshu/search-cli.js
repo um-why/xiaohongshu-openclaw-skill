@@ -93,11 +93,11 @@ async function main() {
 
   utils.printBanner();
   utils.printInfo(`原始关键词: ${keyword}`);
+  keyword = validator.cleanKeyword(keyword);
   const isRight = validator.isKeywordValid(keyword);
   if (!isRight) {
     process.exit(1);
   }
-  keyword = validator.cleanKeyword(keyword);
   utils.printInfo(`清洗后关键词: ${keyword}`);
   if (keyword === "") {
     utils.printError(`关键词不能为空`);
@@ -130,7 +130,7 @@ async function main() {
       status: "error",
       error_code: error.code || "UNKNOWN",
       message: error.message,
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       request: {
         command: "search",
         keyword: keyword,
@@ -157,7 +157,7 @@ async function main() {
       status: "empty",
       error_code: "NO_MATCH",
       message: "没有找到匹配的视频或图文内容",
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       request: {
         command: "search",
         keyword: keyword,
@@ -184,7 +184,7 @@ async function main() {
     status: "success",
     error_code: "OK",
     message: "搜索任务完成",
-    timestamp: new Date().toLocaleString(),
+    timestamp: new Date().toISOString(),
     request: {
       command: "search",
       keyword: keyword,

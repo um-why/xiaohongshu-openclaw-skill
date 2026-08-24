@@ -92,7 +92,7 @@ async function main() {
       status: "error",
       error_code: error.code || "UNKNOWN",
       message: error.message,
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       request: {
         command: "detail",
         url: url,
@@ -116,7 +116,7 @@ async function main() {
       status: "empty",
       error_code: "NOT_FOUND",
       message: "没有找到匹配的笔记及评论内容",
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       request: {
         command: "detail",
         url: url,
@@ -139,7 +139,7 @@ async function main() {
     status: "success",
     error_code: "OK",
     message: "详情任务完成",
-    timestamp: new Date().toLocaleString(),
+    timestamp: new Date().toISOString(),
     request: {
       command: "detail",
       url: url,

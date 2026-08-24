@@ -22,17 +22,22 @@ async function request(options, data = null) {
               if (jsonBody.errcode === 0) {
                 resolve(jsonBody);
               } else {
-                const err = new Error(jsonBody.errmsg || "请求失败");
-                err.code = "ERRCODE_" + jsonBody.errcode;
+                let err;
+                if (jsonBody?.errcode <= 16) {
+                  err = new Error(jsonBody?.errmsg || "请求失败");
+                } else {
+                  err = new Error(jsonBody?.errmsg || "请求失败");
+                  err.nonRetryable = true;
+                }
+                err.code = "ERRCODE_" + (jsonBody?.errcode || "UNKNOWN");
                 reject(err);
-                return;
               }
             } catch (error) {
               reject(new Error(`响应解析失败: ${error.message}`));
             }
           } else if (res.statusCode === 401 || res.statusCode === 403) {
             const err = new Error(
-              `GUAIKEI_API_TOKEN 无效, 请检查环境变量 或 联系微信: 13395823479 获取解决方案`,
+              `GUAIKEI_API_TOKEN 无效, 请检查环境变量 或 通过 www.guaikei.com 获取解决方案`,
             );
             err.nonRetryable = true;
             err.statusCode = res.statusCode;
@@ -49,31 +54,28 @@ async function request(options, data = null) {
             reject(err);
           }
         });
-        res.on("error", (err) => {
-          if (timedOut) return;
-          reject(new Error(`响应错误: ${err.message}`));
-        });
       },
     );
     req.on("error", (err) => {
       if (timedOut) return;
-      if (err.code === "ETIMEDOUT" || err.code === "ECONNRESET") {
-        reject(new Error("请求超时或连接被重置"));
-      } else {
-        reject(new Error(`网络错误: ${err.message}`));
-      }
+      const wrapped = new Error(`网络错误: ${err.message}`);
+      wrapped.code = err.code || "NETWORK_ERROR";
+      wrapped.nonRetryable = false;
+      reject(wrapped);
     });
     req.on("timeout", () => {
       timedOut = true;
       req.destroy();
-      reject(new Error("请求超时"));
+      const err = new Error("请求超时");
+      err.code = "TIMEOUT";
+      reject(err);
     });
     if (data) req.write(data);
     req.end();
   });
 }
 
-async function postJson(path, params, data) {
+async function postJson(path, params, data, token) {
   if (!path || typeof path !== "string") {
     throw new Error("path 必须是非空字符串");
   }
@@ -83,6 +85,9 @@ async function postJson(path, params, data) {
   if (!data || typeof data !== "object") {
     throw new Error("data 必须是对象");
   }
+  if (!token || typeof token !== "string") {
+    throw new Error("token 必须是非空字符串");
+  }
   params.skill_name = skillName();
   const fullPath = `${path}?${querystring.stringify(params)}`;
   const jsonData = JSON.stringify(data);
@@ -91,6 +96,7 @@ async function postJson(path, params, data) {
     path: fullPath,
     method: "POST",
     headers: {
+      TOKEN: token,
       "Content-Type": "application/json",
       "Content-Length": Buffer.byteLength(jsonData),
     },
@@ -98,12 +104,15 @@ async function postJson(path, params, data) {
   return await request(options, jsonData);
 }
 
-async function getJson(path, params) {
+async function getJson(path, params, token) {
   if (!path || typeof path !== "string") {
     throw new Error("path 必须是非空字符串");
   }
   if (!params || typeof params !== "object") {
     throw new Error("params 必须是对象");
+  }
+  if (!token || typeof token !== "string") {
+    throw new Error("token 必须是非空字符串");
   }
   params._ = Date.now();
 
@@ -113,6 +122,7 @@ async function getJson(path, params) {
     path: fullPath,
     method: "GET",
     headers: {
+      TOKEN: token,
       "Content-Type": "application/json",
     },
   };

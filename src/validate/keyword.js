@@ -17,7 +17,7 @@ function isKeywordValid(keyword) {
     utils.printError(`搜索关键词长度不能超过 50 个字符`);
     return false;
   }
-  if (/[<>\"'&]/g.test(keyword)) {
+  if (/[<>"']/g.test(keyword)) {
     utils.printError(`搜索关键词包含特殊字符, 请输入普通关键词, 例如: 新媒体`);
     return false;
   }
@@ -34,12 +34,17 @@ function isKeywordValid(keyword) {
  * 清洗搜索关键词
  */
 function cleanKeyword(keyword) {
-  if (typeof keyword !== "string" || keyword.trim() === "") return "";
-  keyword = keyword.trim();
-  keyword = keyword.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s.,!?# ，。！？]/g, "");
-  keyword = keyword.trim();
-  if (keyword.length === 0) return "";
-  return keyword;
+  if (typeof keyword !== "string") return "";
+  return (
+    keyword
+      // 去控制字符与零宽字符
+      .replace(/[\u0000-\u001f\u007f\u200b-\u200f\ufeff]/g, "")
+      // 去 emoji 与杂项符号(保留文字类)
+      .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, "")
+      // 多个空白收敛为一个
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 /**

@@ -92,7 +92,7 @@ async function main() {
       status: "error",
       error_code: error.code || "UNKNOWN",
       message: error.message,
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       request: {
         command: "comment",
         url: url,
@@ -116,7 +116,7 @@ async function main() {
       status: "empty",
       error_code: "NOT_FOUND",
       message: "没有找到匹配的评论内容",
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       request: {
         command: "comment",
         url: url,
@@ -139,7 +139,7 @@ async function main() {
     status: "success",
     error_code: "OK",
     message: "评论任务完成",
-    timestamp: new Date().toLocaleString(),
+    timestamp: new Date().toISOString(),
     request: {
       command: "comment",
       url: url,

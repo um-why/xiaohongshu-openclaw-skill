@@ -2,21 +2,14 @@
  * 通用 CLI 参数解析器
  */
 
-/**
- * 读取 flag 后面的值, 若缺失或为另一个 flag 则报错
- * @param {string[]} args - 参数数组
- * @param {number} index - 当前 flag 的索引
- * @param {string} flagName - flag 名称 (用于错误提示)
- * @returns {string} 解析到的值
- * @throws {Error} 若值缺失或为另一个 flag
- */
-function readValueAfterFlag(args, index, flagName) {
+function readValueAfterFlag(args, index, flagName, def) {
   const next = args[index + 1];
-  if (next === undefined) {
-    throw new Error(`参数 ${flagName} 缺少值`);
+  if (next === undefined) throw new Error(`参数 ${flagName} 缺少值`);
+  if (/^--[a-zA-Z]/.test(next)) {
+    throw new Error(`参数 ${flagName} 缺少值（下一个 token 是 ${next}）`);
   }
-  if (next.startsWith("-")) {
-    throw new Error(`参数 ${flagName} 的值不能以 "-" 开头, 收到: "${next}"`);
+  if (def && def.type === "number" && !/^-?\d+(\.\d+)?$/.test(next)) {
+    throw new Error(`参数 ${flagName} 需要数字，收到: "${next}"`);
   }
   return next;
 }
@@ -35,25 +28,31 @@ function readValueAfterFlag(args, index, flagName) {
 function parseArgs(args, schema) {
   const result = {};
   const seen = new Set();
+  const warnings = [];
 
-  // 初始化默认值
   for (const def of Object.values(schema.flags)) {
-    if (def.default !== undefined) {
-      result[def.key] = def.default;
-    }
+    if (def.default !== undefined) result[def.key] = def.default;
   }
 
   let i = 0;
   while (i < args.length) {
-    const arg = args[i];
+    let arg = args[i];
+    let inlineValue = null;
 
-    // 帮助
     if (arg === "--help" || arg === "-h") {
       result._help = true;
       return result;
     }
 
-    // 查找匹配的 flag
+    // 新增：支持 --flag=value / -k=value
+    if (arg.startsWith("-")) {
+      const eq = arg.indexOf("=");
+      if (eq > 0) {
+        inlineValue = arg.slice(eq + 1);
+        arg = arg.slice(0, eq);
+      }
+    }
+
     let matched = null;
     for (const [flag, def] of Object.entries(schema.flags)) {
       if (arg === flag || (def.alias && arg === def.alias)) {
@@ -64,39 +63,58 @@ function parseArgs(args, schema) {
 
     if (matched) {
       const { flag, def } = matched;
-      if (seen.has(def.key)) {
-        throw new Error(`参数 ${flag} 重复指定`);
-      }
+      if (seen.has(def.key)) throw new Error(`参数 ${flag} 重复指定`);
       seen.add(def.key);
 
       if (def.type === "boolean") {
-        result[def.key] = true;
+        result[def.key] = inlineValue === null ? true : inlineValue !== "false";
       } else {
-        const rawValue = readValueAfterFlag(args, i, arg);
+        let rawValue;
+        if (inlineValue !== null) {
+          if (inlineValue === "") throw new Error(`参数 ${flag} 缺少值`);
+          rawValue = inlineValue;
+        } else {
+          rawValue = readValueAfterFlag(args, i, arg, def);
+          i++;
+        }
         result[def.key] = def.transform ? def.transform(rawValue) : rawValue;
-        i++;
       }
     } else if (!arg.startsWith("-")) {
-      // 位置参数
-      if (schema.positionalKey && result[schema.positionalKey] === undefined) {
-        result[schema.positionalKey] = arg;
+      if (schema.positionalKey) {
+        if (
+          result[schema.positionalKey] === undefined ||
+          !seen.has(schema.positionalKey)
+        ) {
+          // 位置参数与显式 flag 冲突时告警而非静默覆盖
+          if (result[schema.positionalKey] !== undefined) {
+            warnings.push(
+              `位置参数 "${arg}" 与已解析值冲突，将保留 "${result[schema.positionalKey]}"`,
+            );
+          } else {
+            result[schema.positionalKey] = arg;
+          }
+        } else {
+          warnings.push(`已通过 flag 指定，忽略多余位置参数: "${arg}"`);
+        }
       } else {
         throw new Error(`未识别的位置参数: ${arg}`);
       }
     } else {
-      throw new Error(`未识别的选项: ${arg}`);
+      const known = Object.keys(schema.flags).join(", ");
+      throw new Error(`未识别的选项: ${arg}（可用: ${known}, --help）`);
     }
-
     i++;
   }
 
-  // 检查必填项
   for (const [flag, def] of Object.entries(schema.flags)) {
     if (def.required && result[def.key] === undefined) {
-      throw new Error(`缺少必填参数: ${flag} (${def.alias || "无别名"})`);
+      throw new Error(
+        `缺少必填参数: ${flag}${def.alias ? " / " + def.alias : ""}`,
+      );
     }
   }
 
+  if (warnings.length) result._warnings = warnings;
   return result;
 }
 

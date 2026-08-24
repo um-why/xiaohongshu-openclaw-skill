@@ -19,7 +19,7 @@ function printLog(level, message) {
     ERROR: "\x1b[31m",
   };
   console.error(
-    `${colorMap[level] || ""}[${new Date().toLocaleString()}] [${level}] ${message}\x1b[0m`,
+    `${colorMap[level] || ""}[${new Date().toISOString()}] [${level}] ${message}\x1b[0m`,
   );
 }
 

@@ -23,7 +23,7 @@ const SCHEMA = {
       type: "number",
       default: 10,
       transform: (v) => Number(v),
-      desc: "主页笔记数量, 1-10000",
+      desc: "主页笔记数量, 0-10000",
     },
   },
   positionalKey: "url",
@@ -39,7 +39,9 @@ function printHelp() {
     ) +
       "\n\n注意:\n" +
       "  - 小红书博主链接是小红书可公开访问的博主主页链接\n" +
-      "  - 请确保环境变量 GUAIKEI_API_TOKEN 已配置\n",
+      "  - 请确保环境变量 GUAIKEI_API_TOKEN 已配置\n" +
+      "  - 主页笔记数量限制: 0-10000, 默认10\n" +
+      "  - 主页笔记数量为0时, 则获取博主的互动数据: 粉丝量、点赞量、收藏量等\n",
   );
 }
 
@@ -76,7 +78,7 @@ async function main() {
     process.exit(1);
   }
   url = validator.normalizeUrl(url);
-  if (!Number.isFinite(limit) || limit <= 0 || limit > 10000) {
+  if (!Number.isFinite(limit) || limit < 0 || limit > 10000) {
     limit = 10;
   }
   utils.printInfo(`主页笔记数量限制: ${limit}`);
@@ -94,7 +96,7 @@ async function main() {
       status: "error",
       error_code: error.code || "UNKNOWN",
       message: error.message,
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       request: {
         command: "post",
         url: url,
@@ -118,7 +120,7 @@ async function main() {
       status: "empty",
       error_code: "NOT_FOUND",
       message: "没有找到匹配的博主笔记",
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       request: {
         command: "post",
         url: url,
@@ -141,7 +143,7 @@ async function main() {
     status: "success",
     error_code: "OK",
     message: "博主笔记任务完成",
-    timestamp: new Date().toLocaleString(),
+    timestamp: new Date().toISOString(),
     request: {
       command: "post",
       url: url,

@@ -19,8 +19,9 @@ async function createDetailTask(token, url, limit) {
     async () => {
       return await postJson(
         "/api/xiaohongshu/detail/url",
-        { _: Date.now(), token: token },
+        { _: Date.now() },
         { url: url, limit: limit },
+        token,
       );
     },
     constants.CREATE_MAX_ATTEMPTS,
@@ -43,12 +44,15 @@ async function createDetailTask(token, url, limit) {
 async function getDetailTask(token, url, limit) {
   return await withRetry(
     async () => {
-      const res = await getJson("/api/xiaohongshu/detail/info", {
-        _: Date.now(),
-        token: token,
-        url: url,
-        limit: limit,
-      });
+      const res = await getJson(
+        "/api/xiaohongshu/detail/info",
+        {
+          _: Date.now(),
+          url: url,
+          limit: limit,
+        },
+        token,
+      );
       if (!res.data || typeof res.data !== "object") {
         throw new Error(`详情结果格式错误: data 不是对象类型`);
       }

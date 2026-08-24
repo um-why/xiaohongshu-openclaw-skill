@@ -22,8 +22,9 @@ async function createSearchTask(token, keyword, type, sort, time, limit) {
     async () => {
       return await postJson(
         "/api/xiaohongshu/note-search/keyword",
-        { _: Date.now(), token: token },
+        { _: Date.now() },
         { keyword, type, sort, time, limit },
+        token,
       );
     },
     constants.CREATE_MAX_ATTEMPTS,
@@ -49,15 +50,18 @@ async function createSearchTask(token, keyword, type, sort, time, limit) {
 async function getSearchTask(token, keyword, type, sort, time, limit) {
   return await withRetry(
     async () => {
-      const res = await getJson("/api/xiaohongshu/note-search/info", {
-        _: Date.now(),
-        token: token,
-        keyword,
-        type,
-        sort,
-        time,
-        limit,
-      });
+      const res = await getJson(
+        "/api/xiaohongshu/note-search/info",
+        {
+          _: Date.now(),
+          keyword,
+          type,
+          sort,
+          time,
+          limit,
+        },
+        token,
+      );
       if (!Array.isArray(res.data)) {
         throw new Error(`搜索结果格式错误: data 不是数组类型`);
       }

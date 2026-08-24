@@ -19,8 +19,9 @@ async function createPostTask(token, url, limit) {
     async () => {
       return await postJson(
         "/api/xiaohongshu/post/url",
-        { _: Date.now(), token: token },
+        { _: Date.now() },
         { url, limit },
+        token,
       );
     },
     constants.CREATE_MAX_ATTEMPTS,
@@ -43,12 +44,18 @@ async function createPostTask(token, url, limit) {
 async function getPostTask(token, url, limit) {
   return await withRetry(
     async () => {
-      const res = await getJson("/api/xiaohongshu/post/info", {
-        _: Date.now(),
-        token: token,
-        url,
-        limit,
-      });
+      const res = await getJson(
+        "/api/xiaohongshu/post/info",
+        {
+          _: Date.now(),
+          url,
+          limit,
+        },
+        token,
+      );
+      if (!res || !res.data) {
+        throw new Error("查询任务结果为空");
+      }
       return res.data;
     },
     constants.QUERY_MAX_ATTEMPTS,
