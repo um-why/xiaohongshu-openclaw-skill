@@ -17,21 +17,13 @@ const SCHEMA = {
       required: true,
       desc: "笔记链接",
     },
-    "--limit": {
-      alias: "-l",
-      key: "limit",
-      type: "number",
-      default: 0,
-      transform: (v) => Number(v),
-      desc: "评论数量, 0-10000",
-    },
   },
   positionalKey: "url",
 };
 
 function printHelp() {
   console.error(
-    buildHelp(SCHEMA, "node src/xiaohongshu/detail-cli.js <笔记链接> [选项]", [
+    buildHelp(SCHEMA, "node src/xiaohongshu/detail-cli.js <笔记链接>", [
       'node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"',
     ]) +
       "\n\n注意:\n" +
@@ -62,7 +54,7 @@ async function main() {
     process.exit(0);
   }
 
-  let { url, limit } = parsed;
+  let { url } = parsed;
 
   utils.printBanner();
   utils.printInfo(`笔记链接: ${url}`);
@@ -74,19 +66,15 @@ async function main() {
     process.exit(1);
   }
   url = validator.normalizeUrl(url);
-  if (!Number.isFinite(limit) || limit < 0 || limit > 10000) {
-    limit = 0;
-  }
-  utils.printInfo(`评论数量限制: ${limit}`);
 
   const token = key.skillKey(process.env.GUAIKEI_API_TOKEN);
   if (token === "") process.exit(1);
   let detailTask = null;
   try {
-    await detail.createDetailTask(token, url, limit);
+    await detail.createDetailTask(token, url);
     utils.printSuccess(`详情任务创建成功, 正在获取中...`);
 
-    detailTask = await detail.getDetailTask(token, url, limit);
+    detailTask = await detail.getDetailTask(token, url);
   } catch (error) {
     const errorOutput = {
       status: "error",
@@ -96,7 +84,6 @@ async function main() {
       request: {
         command: "detail",
         url: url,
-        limit: limit,
       },
       skill_metadata: {
         skill_version: constants.VERSION,
@@ -120,7 +107,6 @@ async function main() {
       request: {
         command: "detail",
         url: url,
-        limit: limit,
       },
       skill_metadata: {
         skill_version: constants.VERSION,
@@ -143,7 +129,6 @@ async function main() {
     request: {
       command: "detail",
       url: url,
-      limit: limit,
     },
     skill_metadata: {
       skill_version: constants.VERSION,

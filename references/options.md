@@ -7,7 +7,7 @@
 | 任务目标                     | 推荐脚本                         | 最少输入              |
 | ---------------------------- | -------------------------------- | --------------------- |
 | 搜某个关键词的小红书公开内容 | `src/xiaohongshu/search-cli.js`  | `keyword`             |
-| 看某篇笔记的详情与评论       | `src/xiaohongshu/detail-cli.js`  | `url`（笔记链接）     |
+| 看某篇笔记的详情             | `src/xiaohongshu/detail-cli.js`  | `url`（笔记链接）     |
 | 看某个博主最近发布的作品     | `src/xiaohongshu/post-cli.js`    | `url`（博主主页链接） |
 | 单独拉某篇笔记的评论数据     | `src/xiaohongshu/comment-cli.js` | `url`（笔记链接）     |
 
@@ -86,35 +86,33 @@ node src/xiaohongshu/search-cli.js --keyword "早春穿搭" --type 2 --time 2 --
 
 ---
 
-## 3. 小红书笔记详情与评论
+## 3. 小红书笔记详情
 
 ### 3.1 适用场景
 
 适合这些任务：
 
 - 看某篇爆款笔记的标题、正文、互动情况
-- 拉取评论区做观点归纳或舆情分析
 - 分析一篇内容为什么表现好
 
 ### 3.2 基础语法
 
 ```bash
-node src/xiaohongshu/detail-cli.js <小红书笔记链接> [选项]
+node src/xiaohongshu/detail-cli.js <小红书笔记链接>
 ```
 
 也支持显式写法：
 
 ```bash
-node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" [选项]
+node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
 ```
 
 ### 3.3 参数说明
 
-| 参数            | 说明                 | 取值 / 默认值                                          |
-| --------------- | -------------------- | ------------------------------------------------------ |
-| `--url`, `-u`   | 小红书笔记链接，必填 | 建议使用笔记详情链接或可解析的短链                     |
-| `--limit`, `-l` | 评论数量上限         | 建议显式传入 `0-10000`；若不传，则获取该笔记的详情数据 |
-| `--help`, `-h`  | 显示帮助信息         | 无                                                     |
+| 参数           | 说明                 | 取值 / 默认值                      |
+| -------------- | -------------------- | ---------------------------------- |
+| `--url`, `-u`  | 小红书笔记链接，必填 | 建议使用笔记详情链接或可解析的短链 |
+| `--help`, `-h` | 显示帮助信息         | 无                                 |
 
 ### 3.4 链接建议
 
@@ -128,7 +126,6 @@ node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xx
 - 尽量使用完整的笔记链接。
 - 如果拿到的是短链，可以直接传入。
 - 如果拿到的是博主主页链接，不要误走这个脚本。
-- 如果用户需要获取笔记的评论内容，建议走**小红书笔记评论查询**能力，这个在获取相同数量的评论内容时花费的TOKEN更多。
 
 ### 3.5 推荐示例
 
@@ -138,23 +135,15 @@ node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xx
 node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
 ```
 
-#### 拉更多评论用于分析
-
-```bash
-node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100
-```
-
 #### 自然语言触发示例
 
-- 分析这条小红书笔记评论区都在讨论什么
-- 看一下这篇小红书爆款笔记的详情和评论反馈
-- 帮我总结这条小红书笔记评论区的主要负面观点
+- 看一下这篇小红书爆款笔记的详情
 
 ### 3.6 使用提醒
 
 - 这个能力需要的是 **笔记链接**，不是博主主页链接。
-- 如果用户只说“帮我分析评论区”，但没有链接，先追问笔记 URL。
-- 如果后续还要做情绪分析、观点聚类、评论摘要，可以先取回结构化结果，再交给上层流程处理。
+- 如果用户只说“帮我分析文章观点”，但没有链接，先追问笔记 URL。
+- 如果后续还要做情绪分析、观点聚类，可以先取回结构化结果，再交给上层流程处理。
 
 ---
 
@@ -237,7 +226,7 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 - 统计某篇笔记评论区的高频主题
 - 分析一篇内容为什么表现好
 
-> 与「笔记详情与评论」的区别：本能力只返回评论数据，不返回笔记正文与互动详情，适合专注评论分析的场景。
+> 与「笔记详情」的区别：本能力只返回评论数据，不返回笔记正文与互动详情，适合专注评论分析的场景。
 
 ### 5.2 基础语法
 
@@ -323,7 +312,8 @@ node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/x
 
 ### 7.2 评论洞察
 
-- 先获取笔记详情与评论
+- 先获取笔记详情
+- 再获取评论区内容
 - 再做观点归类、情绪判断、负面反馈识别
 
 ### 7.3 竞品或 KOL 监控

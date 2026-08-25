@@ -31,7 +31,7 @@
 
 ## 2. 🚀 快速使用
 
-> **Note:** 请先联系开发者微信 <13395823479> 申请 API TOKEN，或访问[小红书实时数据获取技能官网](https://www.guaikei.com)开通TOKEN，配置环境变量 `GUAIKEI_API_TOKEN` 后才能正常运行。
+> **Note:** 请先访问[小红书实时数据获取技能官网](https://www.guaikei.com)开通TOKEN，配置环境变量 `GUAIKEI_API_TOKEN` 后才能正常运行。
 
 ### 2.1 小红书关键词搜索
 
@@ -87,11 +87,9 @@ node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/x
 
 - 启动时会打印工具Banner，方便确认是否正确执行；
 - 过程中会输出彩色日志，用于反馈技能执行情况，过程中无需用户交互；
-- 所有任务结果会自动保存到 `logs/` 目录（按时间+关键词/链接命名）。
 
 > 版本更新日志，请参阅 [changelog.md](references/changelog.md)
 
 ## 6. 📞 帮助与支持
 
-- 联系微信 13395823479（备注小红书技能）开通TOKEN或获得技能使用支持；
-- 或通过 [小红书搜索评论数据获取技能官网](https://www.guaikei.com) 自助开通TOKEN或查阅使用帮助。
+- 通过 [小红书搜索评论数据获取技能官网](https://www.guaikei.com) 自助开通TOKEN、查阅使用帮助或获得技能使用支持。

@@ -10,17 +10,16 @@ const utils = require("../utils/utils");
  * 创建小红书笔记详情及评论任务
  * @param {string} token - API令牌
  * @param {string} url - 笔记链接
- * @param {number} limit - 评论数量, 1-10000
  * @returns {Promise<Object>} 详情任务状态
  * @throws {Error} API调用失败时抛出错误
  */
-async function createDetailTask(token, url, limit) {
+async function createDetailTask(token, url) {
   return await withRetry(
     async () => {
       return await postJson(
         "/api/xiaohongshu/detail/url",
         { _: Date.now() },
-        { url: url, limit: limit },
+        { url: url },
         token,
       );
     },
@@ -37,11 +36,10 @@ async function createDetailTask(token, url, limit) {
  * 获取小红书笔记详情及评论任务结果
  * @param {string} token - API令牌
  * @param {string} url - 笔记链接
- * @param {number} limit - 评论数量, 1-10000
  * @returns {Promise<Object>} 详情结果对象
  * @throws {Error} API调用失败时抛出错误
  */
-async function getDetailTask(token, url, limit) {
+async function getDetailTask(token, url) {
   return await withRetry(
     async () => {
       const res = await getJson(
@@ -49,7 +47,6 @@ async function getDetailTask(token, url, limit) {
         {
           _: Date.now(),
           url: url,
-          limit: limit,
         },
         token,
       );

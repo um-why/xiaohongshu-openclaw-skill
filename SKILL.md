@@ -1,8 +1,8 @@
 ---
 name: xiaohongshu-tool
-description: 小红书公开数据检索工具。当用户提到「小红书」并需要：按关键词搜笔记、看某篇笔记详情、拉某篇笔记评论、查某个博主作品列表、获取某个博主粉丝量等互动数据时调用。可用于爆款选题、竞品监控、KOL 筛选、评论舆情分析，无需登录小红书账号，用数据驱动小红书流量增长
+description: 小红书公开数据检索工具，覆盖关键词搜笔记、笔记详情、评论、博主作品、博主粉丝量等互动数据；当用户提到小红书并需要查/分析公开内容时调用。可用于爆款选题、竞品监控、KOL 筛选、评论舆情分析，无需登录账号
 license: MIT
-version: "1.1.2"
+version: "1.1.3"
 category: 数据分析
 platforms: [WorkBuddy, Openclaw, QClaw, ima, Claude Code, Cursor]
 homepage: https://github.com/um-why/xiaohongshu-openclaw-skill
@@ -13,7 +13,7 @@ metadata:
     bins: ["node"]
     env: ["GUAIKEI_API_TOKEN"]
   env_desc:
-    GUAIKEI_API_TOKEN: "小红书数据 API 访问令牌。未配置时无法调用接口；可通过 https://www.guaikei.com 开通，或联系开发者(wx 13395823479)获取支持。"
+    GUAIKEI_API_TOKEN: "小红书数据 API 访问令牌。未配置时无法调用接口；可通过 https://www.guaikei.com 开通。"
   category:
     - "Integrations"
     - "Research"
@@ -46,9 +46,9 @@ metadata:
     - "小红书营销"
   examples:
     - "帮我找最近一周小红书『露营装备』的高赞图文笔记 → node src/xiaohongshu/search-cli.js --keyword '露营装备' --type 2 --sort 2 --time 2 --limit 20"
-    - "这条小红书笔记评论区在吐槽什么 → node src/xiaohongshu/comment-cli.js --url ''https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy' --limit 200"
+    - "这条小红书笔记评论区在吐槽什么 → node src/xiaohongshu/comment-cli.js --url 'https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy' --limit 200"
     - "看这个小红书博主最近 30 条作品发什么 → node src/xiaohongshu/post-cli.js --url 'https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy' --limit 30"
-    - "分析这篇小红书爆款笔记为什么火 → node src/xiaohongshu/detail-cli.js --url ''https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy' --limit 100"
+    - "分析这篇小红书爆款笔记为什么火 → node src/xiaohongshu/detail-cli.js --url 'https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy'"
     - "监控『多巴胺穿搭』最新动态 → node src/xiaohongshu/search-cli.js --keyword '多巴胺穿搭' --sort 1 --time 1 --limit 50"
 ---
 
@@ -69,9 +69,9 @@ metadata:
 **🔥核心优势**
 
 > - 安全: 无需登录你的小红书账号，不担心风控风险 / 封号问题
-> - 强大: 一次可获取最多1W条数据，技能内置批量操作，使用简单方便
+> - 强大: 一次可获取最多1W条数据，使用简单方便
 > - 全面: 各功能出参数据全面，可见及有价值数据都会返回
-> - 灵活: 支持多维度筛选、批量操作、多格式导出
+> - 灵活: 支持多维度筛选与排序
 > - 轻量: 无需部署服务，Node.js 一键运行
 > - 实用: 日志自动归档，适配营销报告 / 内容策划场景
 
@@ -82,10 +82,9 @@ metadata:
 ### 1.1 🎯 满足以下**任一**条件即调用
 
 - 用户提到「小红书」「小红薯」「xhs」「rednote」并要求查看、搜索、分析内容
-- 用户要做 **关键词搜索**、**爆款选题调研**、**竞品监控**、**评论洞察**、**博主作品追踪**。
+- 用户要做 **关键词搜索**、**爆款选题调研**、**竞品监控**、**评论洞察**、**博主作品追踪**、 **KOL/博主筛选**、**评论区舆情分析**、**关键词趋势跟踪**。
 - 用户提供了小红书关键词、笔记链接或博主主页链接，希望拿到结构化数据。
 - 用户给出 `xiaohongshu.com` 或 `xhslink.com` 开头的链接
-- 用户要做：爆款选题调研、竞品笔记监控、KOL/博主筛选、评论区舆情分析、关键词趋势跟踪
 - 用户说「帮我看看 XX 在小红书上的情况」这类需要真实数据支撑的判断
 - 用户后续还要基于结果继续做总结、对比、筛选、报告生成。
 
@@ -110,26 +109,26 @@ metadata:
 
 > **Note:** 请先通过 [小红书实时数据获取官网](https://www.guaikei.com) 开通TOKEN，配置环境变量 `GUAIKEI_API_TOKEN` 后才能正常运行。
 
-| 用户意图信号                      | 脚本                             | 必填        | 返回                                                              |
-| --------------------------------- | -------------------------------- | ----------- | ----------------------------------------------------------------- |
-| 给的是**关键词**，无链接          | `src/xiaohongshu/search-cli.js`  | `--keyword` | 笔记列表 + 作者 + 互动数据 + 可点击 url                           |
-| 给的是**笔记链接**，要看正文/互动 | `src/xiaohongshu/detail-cli.js`  | `--url`     | 笔记详情 + 作者信息（可带评论）                                   |
-| 给的是**笔记链接**，只要评论      | `src/xiaohongshu/comment-cli.js` | `--url`     | 评论内容 + 评论者 + 互动数据                                      |
-| 给的是**博主主页链接**            | `src/xiaohongshu/post-cli.js`    | `--url`     | 该博主公开作品列表 / 该播主的互动数据（粉丝量、点赞量、收藏量等） |
+| 用户意图信号                          | 脚本                             | 必填        | 返回                                                              |
+| ------------------------------------- | -------------------------------- | ----------- | ----------------------------------------------------------------- |
+| 给的是**关键词**，无链接              | `src/xiaohongshu/search-cli.js`  | `--keyword` | 笔记列表 + 作者 + 互动数据 + 可点击 url                           |
+| 给的是**笔记链接**，要看正文/互动数据 | `src/xiaohongshu/detail-cli.js`  | `--url`     | 笔记详情 + 作者信息                                               |
+| 给的是**笔记链接**，只要评论          | `src/xiaohongshu/comment-cli.js` | `--url`     | 评论内容 + 评论者 + 互动数据                                      |
+| 给的是**博主主页链接**                | `src/xiaohongshu/post-cli.js`    | `--url`     | 该博主公开作品列表 / 该播主的互动数据（粉丝量、点赞量、收藏量等） |
 
 ### 2.1 🧭 路由细则
 
 - 用户给的是 **关键词**，没有链接：走 **关键词搜索**。
-- 用户给的是 `https://www.xiaohongshu.com/explore/...` 或可解析到笔记的短链：若只关心评论，走 **笔记评论查询**；若要连同笔记详情一起看，走 **笔记详情与评论**。
+- 用户给的是 `https://www.xiaohongshu.com/explore/...` 或可解析到笔记的短链：若只关心评论，走 **笔记评论查询**；若要笔记详情一起看，走 **笔记详情**。
 - 用户给的是 `https://www.xiaohongshu.com/user/profile/...` 或可解析到主页的短链：走 **博主作品监控**。
 - 如果用户同时给出多个目标，按用户目标拆分执行，不要把不同意图硬塞进一次命令。
 
 ### 2.2 ⚖️ detail 与 comment 的区别
 
-- `detail-cli.js`：要笔记本身（标题、正文、图片、点赞收藏数）。`--limit` 控制附带的评论数，传 `0` 表示不要评论。
-- `comment-cli.js`：只要评论区，不返回正文。做舆情/观点聚类时用这个，数据量更小更省 token。
+- `detail-cli.js`：要笔记本身（标题、正文、图片、点赞收藏数）。
+- `comment-cli.js`：只要评论区，不返回正文。
 
-**同时需要正文和大量评论时**：调 `detail-cli.js --limit 0` 拿正文，再调 `comment-cli.js --limit 500` 拿评论。比 `detail --limit 500` 更好控。
+**同时需要正文和大量评论时**：调 `detail-cli.js` 拿正文，再调 `comment-cli.js --limit 500` 拿评论。
 
 ### 2.3 🧩 组合工作流
 
@@ -187,15 +186,11 @@ post-cli --limit 20
 
 `--limit` 建议：快速看一眼 `10`；正经做选题 `30-50`；批量分析 `200+`（注意返回体积，超过 1000 条时告知用户数据量）。
 
-### 3.2 📰 笔记详情与评论
+### 3.2 📰 笔记详情
 
 至少要确认：
 
 - `url`：小红书笔记链接。
-
-可选参数：
-
-- `limit`：评论数量上限；为 `0` 时返回该笔记的详情数据。
 
 适用链接示例：
 
@@ -229,7 +224,7 @@ post-cli --limit 20
 
 可选参数：
 
-- `limit`：评论数量上限；不传时按脚本默认行为执行。
+- `limit`：评论数量上限，整数 1-10000，不传时默认 10。
 
 适用链接示例：
 
@@ -296,7 +291,7 @@ node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --
 node src/xiaohongshu/search-cli.js --keyword "多巴胺穿搭" --sort 1 --time 1 --limit 50
 
 # 笔记详情（不带评论，省 token）
-node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 0
+node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
 
 # 只拉评论，做舆情分析
 node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 200
@@ -343,17 +338,17 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 - 数据流向：本机 → guaikei.com API → 返回结果。除关键词/链接等查询参数外，不上传本机任何数据
 - 仅处理小红书公开可见数据，不涉及登录态与个人隐私
 - 结果限个人 / 团队内部分析使用，不得违规分发或用于违法用途
-- 本技能会依赖第三方 API 服务，请在使用前确认数据外发与授权范围。
+- 查询参数（关键词 / 链接）会发送至 guaikei.com API，请在使用前确认数据外发与授权范围。
 
 ## 9. 🚫 反模式
 
-| 错误做法                                    | 后果              | 正确做法                                |
-| ------------------------------------------- | ----------------- | --------------------------------------- |
-| 把主页链接传给 `detail-cli` / `comment-cli` | 不返回数据        | 主页链接走 `post-cli`                   |
-| 把笔记链接传给 `post-cli`                   | 不返回数据        | 笔记链接走 `detail-cli` / `comment-cli` |
-| 关键词填纯 emoji 或纯符号（`🔥🔥`、`【】`） | 直接清洗          | 换有意义的文字                          |
-| `--limit 20000`                             | 超上限被回退为 10 | 上限是 10000                            |
-| 用本技能查抖音/B站                          | 无结果            | 明确告知不支持                          |
+| 错误做法                                    | 后果                   | 正确做法                                |
+| ------------------------------------------- | ---------------------- | --------------------------------------- |
+| 把主页链接传给 `detail-cli` / `comment-cli` | 不返回数据             | 主页链接走 `post-cli`                   |
+| 把笔记链接传给 `post-cli`                   | 不返回数据             | 笔记链接走 `detail-cli` / `comment-cli` |
+| 关键词只含 emoji / 控制字符 / 纯符号        | 清洗后变空导致校验失败 | 换有意义的文字关键词                    |
+| `--limit 20000`                             | 超上限被回退为 10      | 上限是 10000                            |
+| 用本技能查抖音/微信                         | 无结果                 | 明确告知不支持                          |
 
 ---
 
@@ -362,7 +357,7 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 **Q1. 报错 `error_code: 401` 或 `403` 怎么办？**
 
 > 含义：`GUAIKEI_API_TOKEN` 未配置或无效。
-> 自查：①确认运行环境里确实 `export GUAIKEI_API_TOKEN=...` 了（不是只在 shell 配置里写了）；②token 须为 **32 位十六进制**（如 `abcdefghij0123456789abcdefghij12`），核对是否有多余空格或换行；③是否已过期，去 <https://www.guaikei.com> 重新开通。
+> 自查：①确认运行环境里确实 `export GUAIKEI_API_TOKEN=...` 了（不是只在 shell 配置里写了）；②token 长度16-256位，由字母、数字、下划线、短横线组成的字符串（以 guaikei.com 开通页显示为准），核对是否有多余空格或换行；③是否已过期，去 <https://www.guaikei.com> 重新开通。
 
 **Q2. 报错 `error_code: 429` 怎么办？**
 
@@ -410,4 +405,3 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 
 - 官网 / TOKEN 开通：[小红书搜索评论数据获取技能官网](https://www.guaikei.com)
 - 问题反馈：https://github.com/um-why/xiaohongshu-openclaw-skill/issues
-- 人工支持：微信 `13395823479`（备注：小红书技能）
