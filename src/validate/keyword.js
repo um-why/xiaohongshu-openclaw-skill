@@ -69,7 +69,7 @@ function optionFormat(type, sort, time, limit) {
     utils.printError(`发布时间 ${time} 无效, 请使用 0, 1, 2, 3。 默认值为 0`);
     time = 0;
   }
-  if (limit <= 0 || limit > 10000) {
+  if (!Number.isInteger(limit) || limit <= 0 || limit > 10000) {
     utils.printError(`搜索数量 ${limit} 无效, 请使用 1-10000。 默认值为 10`);
     limit = 10;
   }

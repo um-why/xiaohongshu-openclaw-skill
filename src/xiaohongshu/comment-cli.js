@@ -17,6 +17,14 @@ const SCHEMA = {
       required: true,
       desc: "笔记链接",
     },
+    "--expire": {
+      alias: "-e",
+      key: "expire",
+      type: "number",
+      default: 2190,
+      transform: (v) => Number(v),
+      desc: "有效评论天数, 单位: 天",
+    },
     "--limit": {
       alias: "-l",
       key: "limit",
@@ -57,12 +65,15 @@ async function main() {
     printHelp();
     process.exit(1);
   }
+  if (parsed._warnings) {
+    for (const w of parsed._warnings) utils.printWarn(w);
+  }
   if (parsed._help) {
     printHelp();
     process.exit(0);
   }
 
-  let { url, limit } = parsed;
+  let { url, expire, limit } = parsed;
 
   utils.printBanner();
   utils.printInfo(`笔记链接: ${url}`);
@@ -74,19 +85,32 @@ async function main() {
     process.exit(1);
   }
   url = validator.normalizeUrl(url);
-  if (!Number.isFinite(limit) || limit <= 0 || limit > 10000) {
+  if (!Number.isInteger(expire) || expire <= 0 || expire > 4745) {
+    expire = 2190;
+  }
+  utils.printInfo(`有效评论天数: ${expire}`);
+  if (!Number.isInteger(limit) || limit <= 0 || limit > 10000) {
     limit = 10;
   }
   utils.printInfo(`评论数量限制: ${limit}`);
+  let expireTime = new Date().setDate(new Date().getDate() - expire);
+  expireTime = new Date(expireTime);
+  expire =
+    expireTime.getFullYear() +
+    "-" +
+    String(expireTime.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(expireTime.getDate()).padStart(2, "0") +
+    " 00:00:00";
 
   const token = key.skillKey(process.env.GUAIKEI_API_TOKEN);
   if (token === "") process.exit(1);
   let commentTask = null;
   try {
-    await comment.createCommentTask(token, url, limit);
+    await comment.createCommentTask(token, url, expire, limit);
     utils.printSuccess(`评论任务创建成功, 正在获取中...`);
 
-    commentTask = await comment.getCommentTask(token, url, limit);
+    commentTask = await comment.getCommentTask(token, url, expire, limit);
   } catch (error) {
     const errorOutput = {
       status: "error",
@@ -96,6 +120,7 @@ async function main() {
       request: {
         command: "comment",
         url: url,
+        expire: expire,
         limit: limit,
       },
       skill_metadata: {
@@ -120,6 +145,7 @@ async function main() {
       request: {
         command: "comment",
         url: url,
+        expire: expire,
         limit: limit,
       },
       skill_metadata: {
@@ -143,6 +169,7 @@ async function main() {
     request: {
       command: "comment",
       url: url,
+      expire: expire,
       limit: limit,
     },
     skill_metadata: {

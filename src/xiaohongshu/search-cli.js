@@ -84,6 +84,9 @@ async function main() {
     printHelp();
     process.exit(1);
   }
+  if (parsed._warnings) {
+    for (const w of parsed._warnings) utils.printWarn(w);
+  }
   if (parsed._help) {
     printHelp();
     process.exit(0);
@@ -99,10 +102,6 @@ async function main() {
     process.exit(1);
   }
   utils.printInfo(`清洗后关键词: ${keyword}`);
-  if (keyword === "") {
-    utils.printError(`关键词不能为空`);
-    process.exit(1);
-  }
 
   [type, sort, time, limit] = validator.optionFormat(type, sort, time, limit);
   utils.printInfo(

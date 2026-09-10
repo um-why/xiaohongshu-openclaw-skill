@@ -1,8 +1,11 @@
+const BARE_NOTE_ID_RE = /^[0-9a-f]{24}$/i;
+
 function normalizeUrl(url) {
   if (typeof url !== "string" || url.trim() === "") {
     return false;
   }
   url = url.trim();
+  if (BARE_NOTE_ID_RE.test(url)) return url;
   url = url.replace(/^http:\/\//, "https://");
   if (!url.startsWith("https://")) {
     return false;
@@ -16,11 +19,16 @@ function normalizeUrl(url) {
 function isNoteUrl(url) {
   url = normalizeUrl(url);
   if (!url) return false;
+  if (BARE_NOTE_ID_RE.test(url)) return true;
   if (url.startsWith("https://www.xiaohongshu.com/explore/")) {
     return true;
   } else if (url.startsWith("https://xhslink.com/m/")) {
     return true;
+  } else if (url.startsWith("https://xhslink.com/o/")) {
+    return true;
   } else if (url.startsWith("https://xhslink.cn/m/")) {
+    return true;
+  } else if (url.startsWith("https://xhslink.cn/o/")) {
     return true;
   } else {
     return false;
@@ -34,7 +42,11 @@ function isProfileUrl(url) {
     return true;
   } else if (url.startsWith("https://xhslink.com/m/")) {
     return true;
+  } else if (url.startsWith("https://xhslink.com/o/")) {
+    return true;
   } else if (url.startsWith("https://xhslink.cn/m/")) {
+    return true;
+  } else if (url.startsWith("https://xhslink.cn/o/")) {
     return true;
   } else {
     return false;
@@ -51,7 +63,9 @@ function url2Name(url) {
     .replace(/www\.xiaohongshu\.com\/explore\//, "note_")
     .replace(/www\.xiaohongshu\.com\/user\/profile\//, "profile_")
     .replace(/xhslink\.com\/m\//, "short_")
+    .replace(/xhslink\.com\/o\//, "short_")
     .replace(/xhslink\.cn\/m\//, "short_")
+    .replace(/xhslink\.cn\/o\//, "short_")
     .replace(/[\/?=&-]/g, "_");
   return name || "unknown";
 }

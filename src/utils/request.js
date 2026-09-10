@@ -23,7 +23,7 @@ async function request(options, data = null) {
                 resolve(jsonBody);
               } else {
                 let err;
-                if (jsonBody?.errcode <= 16) {
+                if (jsonBody?.errcode < 10) {
                   err = new Error(jsonBody?.errmsg || "请求失败");
                 } else {
                   err = new Error(jsonBody?.errmsg || "请求失败");
@@ -41,7 +41,7 @@ async function request(options, data = null) {
             );
             err.nonRetryable = true;
             err.statusCode = res.statusCode;
-            err.code = res.statusCode;
+            err.code = String(res.statusCode);
             reject(err);
           } else {
             const err = new Error(`请求失败, 状态码: ${res.statusCode}`);
@@ -50,7 +50,7 @@ async function request(options, data = null) {
               res.statusCode < 500 &&
               res.statusCode !== 429;
             err.statusCode = res.statusCode;
-            err.code = res.statusCode;
+            err.code = String(res.statusCode);
             reject(err);
           }
         });
@@ -115,7 +115,7 @@ async function getJson(path, params, token) {
     throw new Error("token 必须是非空字符串");
   }
   params._ = Date.now();
-
+  params.skill_name = skillName();
   const fullPath = `${path}?${querystring.stringify(params)}`;
   const options = {
     host: constants.BASE_URL,

@@ -49,6 +49,9 @@ async function main() {
     printHelp();
     process.exit(1);
   }
+  if (parsed._warnings) {
+    for (const w of parsed._warnings) utils.printWarn(w);
+  }
   if (parsed._help) {
     printHelp();
     process.exit(0);

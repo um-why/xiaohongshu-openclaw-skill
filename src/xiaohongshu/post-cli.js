@@ -61,6 +61,9 @@ async function main() {
     printHelp();
     process.exit(1);
   }
+  if (parsed._warnings) {
+    for (const w of parsed._warnings) utils.printWarn(w);
+  }
   if (parsed._help) {
     printHelp();
     process.exit(0);
@@ -78,7 +81,7 @@ async function main() {
     process.exit(1);
   }
   url = validator.normalizeUrl(url);
-  if (!Number.isFinite(limit) || limit < 0 || limit > 10000) {
+  if (!Number.isInteger(limit) || limit < 0 || limit > 10000) {
     limit = 10;
   }
   utils.printInfo(`主页笔记数量限制: ${limit}`);

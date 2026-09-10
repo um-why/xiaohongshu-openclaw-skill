@@ -14,13 +14,13 @@ const utils = require("../utils/utils");
  * @returns  {Promise<Object>} 评论任务状态
  * @throws {Error} API调用失败时抛出错误
  */
-async function createCommentTask(token, url, limit) {
+async function createCommentTask(token, url, expire, limit) {
   return await withRetry(
     async () => {
       return await postJson(
         "/api/xiaohongshu/comment/url",
         { _: Date.now() },
-        { url, limit },
+        { url, expired_at: expire, limit },
         token,
       );
     },
@@ -41,7 +41,7 @@ async function createCommentTask(token, url, limit) {
  * @returns {Promise<Object>} 评论数组
  * @throws {Error} API调用失败时抛出错误
  */
-async function getCommentTask(token, url, limit) {
+async function getCommentTask(token, url, expire, limit) {
   return await withRetry(
     async () => {
       const res = await getJson(
@@ -49,6 +49,7 @@ async function getCommentTask(token, url, limit) {
         {
           _: Date.now(),
           url,
+          expired_at: expire,
           limit,
         },
         token,

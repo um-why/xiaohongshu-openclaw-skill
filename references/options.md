@@ -242,11 +242,12 @@ node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/x
 
 ### 5.3 参数说明
 
-| 参数            | 说明                 | 取值 / 默认值                                        |
-| --------------- | -------------------- | ---------------------------------------------------- |
-| `--url`, `-u`   | 小红书笔记链接，必填 | 建议使用笔记详情链接或可解析的短链                   |
-| `--limit`, `-l` | 评论数量上限         | 建议显式传入 `1-10000`；若不传，则按脚本默认行为执行 |
-| `--help`, `-h`  | 显示帮助信息         | 无                                                   |
+| 参数             | 说明                 | 取值 / 默认值                                        |
+| ---------------- | -------------------- | ---------------------------------------------------- |
+| `--url`, `-u`    | 小红书笔记链接，必填 | 建议使用笔记详情链接或可解析的短链                   |
+| `--expire`, `-e` | 有效评论天数筛选     | 建议显式传入 `1-4745`；若不传，则按脚本默认行为执行  |
+| `--limit`, `-l`  | 评论数量上限         | 建议显式传入 `1-10000`；若不传，则按脚本默认行为执行 |
+| `--help`, `-h`   | 显示帮助信息         | 无                                                   |
 
 ### 5.4 链接建议
 
@@ -273,6 +274,12 @@ node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/x
 
 ```bash
 node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100
+```
+
+#### 拉一年内评论，剔除一年前无效评论
+
+```bash
+node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100 --expire 365
 ```
 
 #### 自然语言触发示例

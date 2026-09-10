@@ -44,7 +44,6 @@ function parseArgs(args, schema) {
       return result;
     }
 
-    // 新增：支持 --flag=value / -k=value
     if (arg.startsWith("-")) {
       const eq = arg.indexOf("=");
       if (eq > 0) {
@@ -64,6 +63,15 @@ function parseArgs(args, schema) {
     if (matched) {
       const { flag, def } = matched;
       if (seen.has(def.key)) throw new Error(`参数 ${flag} 重复指定`);
+      if (
+        schema.positionalKey === def.key &&
+        result[def.key] !== undefined &&
+        !seen.has(def.key)
+      ) {
+        warnings.push(
+          `位置参数 "${result[def.key]}" 与 ${flag} 冲突，将保留 ${flag} 的值`,
+        );
+      }
       seen.add(def.key);
 
       if (def.type === "boolean") {

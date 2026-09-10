@@ -3,6 +3,17 @@ const path = require("path");
 const os = require("os");
 const utils = require("./utils");
 
+function localDateStr() {
+  const d = new Date();
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+}
+
 async function taskWrite(filename, content) {
   if (!filename || typeof filename !== "string") {
     utils.printError("日志文件名必须是非空字符串");
@@ -23,7 +34,7 @@ async function taskWrite(filename, content) {
     safeFilename = `log_${Date.now()}`;
   }
 
-  const dayDir = new Date().toISOString().slice(0, 10);
+  const dayDir = localDateStr();
   const outputDir = path.join(
     os.tmpdir(),
     "xiaohongshu-guaikei",
@@ -33,7 +44,7 @@ async function taskWrite(filename, content) {
   const outputFilename = path.join(outputDir, safeFilename);
 
   try {
-    await fs.promises.mkdir(path.dirname(outputDir), { recursive: true });
+    await fs.promises.mkdir(outputDir, { recursive: true });
     await fs.promises.writeFile(outputFilename, content);
     utils.printSuccess(`  → 已保存到 ${outputFilename}`);
   } catch (error) {
