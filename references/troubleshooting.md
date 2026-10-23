@@ -59,5 +59,5 @@ stdout 只有最后这一份信封，用 `status` 区分成功、空结果和错
 
 ## 支持信息
 
-- [小红书数据接口官网](https://www.guaikei.com)
+- [小红书洞察与竞品分析助手官网](https://www.guaikei.com)
 - 问题反馈：[GitHub Issues](https://github.com/um-why/xiaohongshu-openclaw-skill/issues)

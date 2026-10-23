@@ -4,13 +4,10 @@ description: "小红书公开数据只读技能：关键词搜笔记、爆款选
 license: MIT
 version: "1.2.0"
 category: 数据分析
-platforms: [WorkBuddy, Openclaw, QClaw, ima, Claude Code, Cursor]
 homepage: https://www.guaikei.com
 metadata:
-  display-name: 小红书搜索·笔记·评论·博主
   openclaw:
     emoji: "📕"
-    homepage: https://www.guaikei.com
     primaryEnv: GUAIKEI_API_TOKEN
     requires:
       bins:
@@ -342,9 +339,9 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 
 直接说不支持，不要变通：登录或写操作（发布、点赞、评论、关注、私信）；私密笔记、草稿、仅粉丝可见；创作者后台；用户个人身份信息；报价和聚光等商业化数据。
 
-调用会把关键词或链接发到[小红书公开数据接口](https://www.guaikei.com)。不上传本机文件。结果只供个人或团队内部分析。
+调用会把关键词或链接发到[小红书洞察与竞品分析助手](https://www.guaikei.com)。不上传本机文件。结果只供个人或团队内部分析。
 
-🎧 [开通小红书数据 TOKEN](https://www.guaikei.com)，或微信 `13395823479`（备注：小红书技能）。问题见 [GitHub Issues](https://github.com/um-why/xiaohongshu-openclaw-skill/issues)。
+🎧 开通[小红书洞察与竞品分析助手 TOKEN](https://www.guaikei.com)，或微信 `13395823479`（备注：小红书技能）。问题见 [GitHub Issues](https://github.com/um-why/xiaohongshu-openclaw-skill/issues)。
 
 参数细则见 [references/options.md](references/options.md)，排查见 [references/troubleshooting.md](references/troubleshooting.md)，更新记录见 [references/changelog.md](references/changelog.md)。
 

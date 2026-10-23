@@ -39,7 +39,7 @@
 
 **1. 开通 TOKEN**
 
-到[小红书数据接口官网](https://www.guaikei.com)开通，或微信 `13395823479`（备注：小红书技能）。TOKEN 是 16–256 位的字符串。
+到[小红书竞品分析助手官网](https://www.guaikei.com)开通，或微信 `13395823479`（备注：小红书技能）。TOKEN 是 16–256 位的字符串。
 
 **2. 配到环境变量**
 
@@ -131,7 +131,7 @@ node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --
 经[小红书公开数据接口](https://www.guaikei.com)返回，只覆盖小红书公开可见的内容。除了关键词和链接这类查询参数，不上传你电脑上的其他数据。结果请在个人或团队内部分析时使用。
 
 **一定要 TOKEN 吗？**
-要。接口按 TOKEN 调用。开通入口在[小红书数据 TOKEN 开通页](https://www.guaikei.com)，也可以微信 `13395823479`。
+要。接口按 TOKEN 调用。开通入口在[小红书洞察与竞品分析助手官网](https://www.guaikei.com)，也可以微信 `13395823479`。
 
 **查一条要等多久？**
 小批量通常一轮查询就能回来。条数大、或者任务还在处理时，命令会继续等，屏幕上的「处理中」不是失败。等命令结束再看结果。
@@ -176,6 +176,6 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 
 ## 现在就可以开通
 
-[去小红书数据接口官网开通 TOKEN](https://www.guaikei.com)
+去[小红书洞察分析助手官网开通 TOKEN](https://www.guaikei.com)
 
 微信 `13395823479`（备注：小红书技能）· 问题反馈 [GitHub Issues](https://github.com/um-why/xiaohongshu-openclaw-skill/issues)
