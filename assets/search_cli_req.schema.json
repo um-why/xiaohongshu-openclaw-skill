@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "小红书关键词搜索 - 命令行入参",
+    "description": "小红书笔记搜索的命令行参数。非法枚举或越界数量会直接失败，不会改成默认值。",
+    "required": ["keyword"],
+    "properties": {
+        "keyword": {
+            "type": "string",
+            "description": "搜索关键词。1-50 个字符，不能是链接，不含 < > \" '",
+            "minLength": 1,
+            "maxLength": 50
+        },
+        "type": {
+            "type": "number",
+            "description": "内容类型。0 全部，1 视频，2 图文",
+            "default": 0,
+            "enum": [0, 1, 2]
+        },
+        "sort": {
+            "type": "number",
+            "description": "排序。0 综合，1 最新，2 最多点赞，3 最多评论，4 最多收藏",
+            "default": 0,
+            "enum": [0, 1, 2, 3, 4]
+        },
+        "time": {
+            "type": "number",
+            "description": "发布时间。0 全部，1 一天内，2 一周内，3 半年内",
+            "default": 0,
+            "enum": [0, 1, 2, 3]
+        },
+        "limit": {
+            "type": "number",
+            "description": "返回数量",
+            "minimum": 1,
+            "maximum": 10000,
+            "default": 20
+        }
+    },
+    "additionalProperties": false
+}

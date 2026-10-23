@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "小红书笔记评论 - 命令行入参",
+    "description": "获取一篇笔记的评论。expired_at 不传时，命令按北京时间近 6 年换算成一个时间点，创建和查询共用。",
+    "required": ["url"],
+    "properties": {
+        "url": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "笔记链接或 24 位笔记 id。支持 https://www.xiaohongshu.com/explore/{id}、https://www.xiaohongshu.com/discovery/item/{id}、https://xhslink.com/o/*、https://xhslink.cn/o/*、https://xhslink.com/m/*、https://xhslink.cn/m/*"
+        },
+        "limit": {
+            "type": "number",
+            "description": "评论数量",
+            "minimum": 1,
+            "maximum": 10000,
+            "default": 10
+        },
+        "expired_at": {
+            "description": "近 N 天内的评论，或该时间之后的评论。数字表示天数；字符串格式为 YYYY-MM-DD HH:mm:ss。不传时命令按北京时间近 6 年换算成一个 YYYY-MM-DD 00:00:00，创建和查询共用。limit=10000 且 expired_at=1 时也只返回近 1 天",
+            "oneOf": [
+                { "type": "number", "minimum": 1 },
+                { "type": "string" }
+            ]
+        }
+    },
+    "additionalProperties": false
+}

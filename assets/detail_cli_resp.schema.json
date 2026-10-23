@@ -1,0 +1,49 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "小红书笔记详情 - results 对象",
+    "description": "详情成功时的 results。空字符串和数字 0 可能不返回。不包含评论。整份 stdout 见 output_envelope.schema.json。",
+    "properties": {
+        "id": { "type": "string", "description": "笔记 ID" },
+        "type": { "type": "string", "description": "笔记类型" },
+        "title": { "type": "string", "description": "笔记标题" },
+        "content": { "type": "string", "description": "笔记内容" },
+        "publish_time": { "type": "string", "description": "发布时间" },
+        "ip_location": { "type": "string", "description": "发布位置" },
+        "liked_count": { "type": "string", "description": "点赞数" },
+        "collected_count": { "type": "string", "description": "收藏数" },
+        "comment_count": { "type": "string", "description": "评论数" },
+        "shared_count": { "type": "string", "description": "分享数" },
+        "nice_count": { "type": "string", "description": "点赞数" },
+        "user": {
+            "type": "object",
+            "description": "发布者信息",
+            "properties": {
+                "user_id": { "type": "string", "description": "作者 ID" },
+                "nickname": { "type": "string", "description": "作者昵称" },
+                "red_id": { "type": "string", "description": "接口字段，文档未进一步说明" }
+            }
+        },
+        "image_list": {
+            "type": "array",
+            "description": "图片 URL 列表",
+            "items": { "type": "string", "description": "图片 URL" }
+        },
+        "note_statement": { "type": "string", "description": "图片描述" },
+        "video_url": {
+            "type": "array",
+            "description": "视频 URL 列表",
+            "items": { "type": "string", "description": "视频 URL" }
+        },
+        "tags": {
+            "type": "array",
+            "description": "标签列表",
+            "items": { "type": "string", "description": "标签名称" }
+        },
+        "topics": {
+            "type": "array",
+            "description": "话题列表",
+            "items": { "type": "string", "description": "话题名称" }
+        }
+    }
+}

@@ -1,70 +1,66 @@
 /**
- * 小红书博主详情、已发布笔记模块
+ * 小红书博主笔记模块
  */
 const constants = require("../config/constants");
-const { postJson, getJson } = require("../utils/request");
-const { withRetry } = require("../utils/retry");
-const utils = require("../utils/utils");
+const { requestApi, pollTaskResult } = require("../utils/request");
+const { SkillError } = require("../utils/errors");
 
 /**
- * 创建小红书已发布笔记任务
- * @param {string} token - API令牌
- * @param {string} url - 博主URL
- * @param {number} limit - 返回笔记数量
- * @returns  {Promise<Object>} 已发布笔记任务状态
- * @throws {Error} API调用失败时抛出错误
+ * 创建小红书博主笔记任务
+ * @param {string} token
+ * @param {string} url
+ * @param {number} limit 0 表示只要博主信息
+ * @returns {Promise<object>}
  */
 async function createPostTask(token, url, limit) {
-  return await withRetry(
-    async () => {
-      return await postJson(
-        "/api/xiaohongshu/post/url",
-        { _: Date.now() },
-        { url, limit },
-        token,
-      );
-    },
+  return await requestApi(
+    "POST",
+    "/api/xiaohongshu/post/url",
+    { _: Date.now() },
+    { url, limit },
+    token,
     constants.CREATE_MAX_ATTEMPTS,
-    (attempt, err) => {
-      utils.printError(
-        `【创建任务重试】 ${attempt + 1}/${constants.CREATE_MAX_ATTEMPTS} 次 - ${err.message}`,
-      );
-    },
+    "创建任务",
   );
 }
 
 /**
- * 获取小红书已发布笔记任务结果
- * @param {string} token - API令牌
- * @param {string} url - 博主URL
- * @param {number} limit - 返回笔记数量
- * @returns {Promise<Object>} 已发布笔记数组
- * @throws {Error} API调用失败时抛出错误
+ * 只保留 note 与 user。仅有 error 时视为业务失败。
+ * @param {object} data
+ * @returns {{note?: Array, user?: object}|null}
+ */
+function processPost(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new SkillError("API_ERROR", "作品结果格式错误: data 不是对象", true);
+  }
+  const result = {};
+  if (Array.isArray(data.note)) result.note = data.note;
+  if (data.user && typeof data.user === "object" && !Array.isArray(data.user)) {
+    result.user = data.user;
+  }
+  const hasNotes = Array.isArray(result.note) && result.note.length > 0;
+  const hasUser = result.user && Object.keys(result.user).length > 0;
+  const errorText = typeof data.error === "string" ? data.error.trim() : "";
+  if (!hasNotes && !hasUser) {
+    if (errorText) throw new SkillError("API_ERROR", errorText, true);
+    return null;
+  }
+  return result;
+}
+
+/**
+ * 获取小红书博主笔记任务结果。
+ * @returns {Promise<{note?: Array, user?: object}|null>}
  */
 async function getPostTask(token, url, limit) {
-  return await withRetry(
-    async () => {
-      const res = await getJson(
-        "/api/xiaohongshu/post/info",
-        {
-          _: Date.now(),
-          url,
-          limit,
-        },
-        token,
-      );
-      if (!res || !res.data) {
-        throw new Error("查询任务结果为空");
-      }
-      return res.data;
-    },
-    constants.QUERY_MAX_ATTEMPTS,
-    (attempt, err) => {
-      utils.printError(
-        `【查询任务重试】 ${attempt + 1}/${constants.QUERY_MAX_ATTEMPTS} 次 - ${err.message}`,
-      );
-    },
+  const response = await pollTaskResult(
+    "/api/xiaohongshu/post/info",
+    { url, limit },
+    token,
+    "查询任务",
   );
+  if (response.data == null) return null;
+  return processPost(response.data);
 }
 
 module.exports = {

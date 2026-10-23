@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "小红书博主笔记 - 命令行入参",
+    "description": "获取博主信息或笔记列表。limit 为 0 时只取博主信息和互动数据。",
+    "required": ["url"],
+    "properties": {
+        "url": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "博主主页链接，或 24 / 29 位十六进制 user_id。支持 https://www.xiaohongshu.com/user/profile/{user_id}、https://xhslink.com/o/*、https://xhslink.cn/o/*、https://xhslink.com/m/*、https://xhslink.cn/m/*"
+        },
+        "limit": {
+            "type": "number",
+            "description": "0 只取博主信息和互动数据；大于 0 取笔记列表",
+            "minimum": 0,
+            "maximum": 10000,
+            "default": 0
+        }
+    },
+    "additionalProperties": false
+}

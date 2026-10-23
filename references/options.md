@@ -1,337 +1,127 @@
 # 小红书洞察与竞品分析助手 · 参数与调用说明
 
-> 这份文档与新版 `SKILL.md` 保持一致，用于说明 4 类能力的输入要求、常用参数、推荐调用方式，以及更适合 WorkBuddy / OpenClaw 的使用习惯。
+命令在技能目录下执行。stdout 是一份 JSON 信封，字段见 `assets/*.schema.json`。这里只说明输入和该选哪个命令。
 
-## 1. 使用前先判断调用哪一类能力
+没有关键词或链接时先问，不要空跑。短链 `xhslink.com` / `xhslink.cn` 的 `/m/*`、`/o/*` 不能从外形判断是笔记还是主页，先问用户。前缀后面没有 id，或 id 含有字母、数字、下划线、连字符以外的字符时，命令会直接判为无效链接。不带 `www` 的 `xiaohongshu.com` 会补成 `www`。协议和主机名不区分大小写。含空格的关键词要放在一对引号里，拆成多个位置参数会直接失败。
 
-| 任务目标                     | 推荐脚本                         | 最少输入              |
-| ---------------------------- | -------------------------------- | --------------------- |
-| 搜某个关键词的小红书公开内容 | `src/xiaohongshu/search-cli.js`  | `keyword`             |
-| 看某篇笔记的详情             | `src/xiaohongshu/detail-cli.js`  | `url`（笔记链接）     |
-| 看某个博主最近发布的作品     | `src/xiaohongshu/post-cli.js`    | `url`（博主主页链接） |
-| 单独拉某篇笔记的评论数据     | `src/xiaohongshu/comment-cli.js` | `url`（笔记链接）     |
+## 1. 先选命令
 
-如果用户只表达了业务目标，例如“帮我做小红书竞品分析”，建议先确认是要：
+| 任务 | 脚本 | 最少输入 |
+| --- | --- | --- |
+| 按关键词搜公开笔记 | `src/xiaohongshu/search-cli.js` | `keyword` |
+| 看一篇笔记的正文和互动 | `src/xiaohongshu/detail-cli.js` | 笔记 `url` 或 24 位笔记 id |
+| 看一个博主的信息或笔记 | `src/xiaohongshu/post-cli.js` | 主页 `url`，或 24 / 29 位 `user_id` |
+| 只拉一篇笔记的评论 | `src/xiaohongshu/comment-cli.js` | 笔记 `url` 或 24 位笔记 id |
 
-- 搜关键词
-- 看单篇笔记
-- 是抓某个博主的公开作品
-- 还是获取某个博主的互动数据（粉丝量、点赞量、收藏量等）
+详情不返回评论。正文和评论都要时，先跑详情，再跑评论。
 
-不要在目标不明确时直接执行命令。
-
----
-
-## 2. 小红书关键词搜索
-
-### 2.1 适用场景
-
-适合这些任务：
-
-- 找爆款选题
-- 看某个关键词最近的热门内容
-- 按点赞 / 评论 / 收藏排序做内容调研
-- 结合时间范围做趋势跟踪
-
-### 2.2 基础语法
-
-```bash
-node src/xiaohongshu/search-cli.js <关键词> [选项]
-```
-
-也支持显式写法：
+## 2. 关键词搜索
 
 ```bash
 node src/xiaohongshu/search-cli.js --keyword "夏季穿搭" [选项]
+node src/xiaohongshu/search-cli.js 夏季穿搭 [选项]
 ```
 
-### 2.3 参数说明
+| 参数 | 说明 | 取值 / 默认 |
+| --- | --- | --- |
+| `--keyword` `-k` | 搜索关键词，必填 | 1–50 个字符。不能是链接，不含 `< > " '`。控制字符和 emoji 会先去掉 |
+| `--type` `-t` | 内容类型 | `0` 全部（默认），`1` 视频，`2` 图文 |
+| `--sort` `-s` | 排序 | `0` 综合（默认），`1` 最新，`2` 最多点赞，`3` 最多评论，`4` 最多收藏 |
+| `--time` `-i` | 发布时间 | `0` 全部（默认），`1` 一天内，`2` 一周内，`3` 半年内 |
+| `--limit` `-l` | 返回数量 | `1–10000`，默认 `20` |
+| `--help` `-h` | 帮助 | 无 |
 
-| 参数              | 说明             | 取值 / 默认值                                                        |
-| ----------------- | ---------------- | -------------------------------------------------------------------- |
-| `--keyword`, `-k` | 搜索关键词，必填 | 建议 2-50 个字符，避免特殊符号                                       |
-| `--type`, `-t`    | 内容类型         | `0` 全部（默认），`1` 视频，`2` 图文                                 |
-| `--sort`, `-s`    | 排序规则         | `0` 综合（默认），`1` 最新，`2` 最多点赞，`3` 最多评论，`4` 最多收藏 |
-| `--time`, `-i`    | 发布时间范围     | `0` 全部（默认），`1` 一天内，`2` 一周内，`3` 半年内                 |
-| `--limit`, `-l`   | 返回数量         | `1-10000`，默认 `10`                                                 |
-| `--help`, `-h`    | 显示帮助信息     | 无                                                                   |
-
-### 2.4 推荐示例
-
-#### 查某个关键词的高赞内容
+非法枚举或越界数量会失败，不会改成默认值。`--time 2` 是一周内，不是 2 天。`--sort 2` 是最多点赞，不是最新。
 
 ```bash
-node src/xiaohongshu/search-cli.js --keyword "露营装备" --sort 2 --limit 10
-```
-
-#### 看最近一周的图文趋势
-
-```bash
+node src/xiaohongshu/search-cli.js --keyword "露营装备" --sort 2 --limit 20
 node src/xiaohongshu/search-cli.js --keyword "早春穿搭" --type 2 --time 2 --sort 1 --limit 20
 ```
 
-#### 自然语言触发示例
+`results` 是笔记数组。互动数是字符串。用 `id` 拼 `https://www.xiaohongshu.com/explore/{id}`，有 `xsec_token` 时加上 `?xsec_token=`。空字符串和数字 0 可能不返回。
 
-更适合在 WorkBuddy / OpenClaw 中这样描述：
-
-- 帮我搜一下小红书里“露营装备”的高赞图文笔记
-- 看看“小红书夏季穿搭”最近一周有什么新趋势
-- 帮我找最近点赞高的小红书视频内容
-
-### 2.5 使用提醒
-
-- 如果用户没有给关键词，先追问关键词，不要空跑。
-- 如果用户给的是链接而不是关键词，应该改走详情或博主监控能力。
-- 如果需要稳定结果，建议显式传 `--limit`、`--sort`、`--time`，不要完全依赖默认值。
-
----
-
-## 3. 小红书笔记详情
-
-### 3.1 适用场景
-
-适合这些任务：
-
-- 看某篇爆款笔记的标题、正文、互动情况
-- 分析一篇内容为什么表现好
-
-### 3.2 基础语法
-
-```bash
-node src/xiaohongshu/detail-cli.js <小红书笔记链接>
-```
-
-也支持显式写法：
+## 3. 笔记详情
 
 ```bash
 node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
+node src/xiaohongshu/detail-cli.js "https://www.xiaohongshu.com/discovery/item/xxx"
 ```
 
-### 3.3 参数说明
+| 参数 | 说明 | 取值 |
+| --- | --- | --- |
+| `--url` `-u` | 笔记链接或笔记 id，必填 | 见下方，接口长度为 string(255) |
+| `--help` `-h` | 帮助 | 无 |
 
-| 参数           | 说明                 | 取值 / 默认值                      |
-| -------------- | -------------------- | ---------------------------------- |
-| `--url`, `-u`  | 小红书笔记链接，必填 | 建议使用笔记详情链接或可解析的短链 |
-| `--help`, `-h` | 显示帮助信息         | 无                                 |
+支持：
 
-### 3.4 链接建议
+- `https://www.xiaohongshu.com/explore/{id}`
+- `https://www.xiaohongshu.com/discovery/item/{id}`
+- `https://xhslink.com/o/*`、`https://xhslink.cn/o/*`
+- `https://xhslink.com/m/*`、`https://xhslink.cn/m/*`
+- 24 位十六进制笔记 id
 
-优先使用以下形式：
+`http://` 会改成 `https://`，不带 `www` 的域名会补上 `www`。博主主页不要传给这个脚本。
 
-- `https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy`
-- `https://xhslink.com/m/xxx`
+`results` 是一个对象：`title`、`content`、`publish_time`、`ip_location`、`liked_count`、`collected_count`、`comment_count`、`shared_count`、`nice_count`、`image_list`、`note_statement`、`video_url`（字符串数组）、`tags`（标签名字符串数组）、`topics`（话题名字符串数组），以及 `user.user_id`、`user.nickname`、`user.red_id`。没有评论。
 
-使用建议：
-
-- 尽量使用完整的笔记链接。
-- 如果拿到的是短链，可以直接传入。
-- 如果拿到的是博主主页链接，不要误走这个脚本。
-
-### 3.5 推荐示例
-
-#### 查看单篇笔记详情
-
-```bash
-node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
-```
-
-#### 自然语言触发示例
-
-- 看一下这篇小红书爆款笔记的详情
-
-### 3.6 使用提醒
-
-- 这个能力需要的是 **笔记链接**，不是博主主页链接。
-- 如果用户只说“帮我分析文章观点”，但没有链接，先追问笔记 URL。
-- 如果后续还要做情绪分析、观点聚类，可以先取回结构化结果，再交给上层流程处理。
-
----
-
-## 4. 小红书博主已发布作品查询
-
-### 4.1 适用场景
-
-适合这些任务：
-
-- 看某个博主最近发了什么
-- 跟踪竞品账号的发文节奏
-- 为 KOL 筛选、账号分析准备原始数据
-- 获取某个博主最近的互动数据（粉丝量、点赞量、收藏量等）
-
-### 4.2 基础语法
-
-```bash
-node src/xiaohongshu/post-cli.js <小红书博主主页链接> [选项]
-```
-
-也支持显式写法：
-
-```bash
-node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy" [选项]
-```
-
-### 4.3 参数说明
-
-| 参数            | 说明                     | 取值 / 默认值                                                                     |
-| --------------- | ------------------------ | --------------------------------------------------------------------------------- |
-| `--url`, `-u`   | 小红书博主主页链接，必填 | 建议使用主页链接或可解析的短链                                                    |
-| `--limit`, `-l` | 返回作品数量上限         | 建议显式传入 `0-10000`；若为0，则获取该博主的互动数据（粉丝量、点赞量、收藏量等） |
-| `--help`, `-h`  | 显示帮助信息             | 无                                                                                |
-
-### 4.4 链接建议
-
-优先使用以下形式：
-
-- `https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy`
-- `https://xhslink.com/m/xxx`
-
-### 4.5 推荐示例
-
-#### 获取博主互动数据（粉丝量、点赞量、收藏量等）
-
-```bash
-node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy" --limit 0
-```
-
-#### 查看最近 20 条作品
+## 4. 博主笔记
 
 ```bash
 node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy" --limit 20
+node src/xiaohongshu/post-cli.js 66a8aaaaaaaaaaaaaaaaaaaa
 ```
 
-#### 自然语言触发示例
+| 参数 | 说明 | 取值 / 默认 |
+| --- | --- | --- |
+| `--url` `-u` | 博主主页或 `user_id`，必填 | 见下方，接口长度为 string(255) |
+| `--limit` `-l` | 笔记数量 | `0–10000`，默认 `0` |
+| `--help` `-h` | 帮助 | 无 |
 
-- 查看这个小红书博主的互动数据（粉丝量、点赞量、收藏量等）
-- 看这个小红书博主最近 20 条作品都在发什么
-- 帮我监控这个竞品账号最近的发文方向
-- 我想看看这个博主最近发布内容的主题分布
+支持 `https://www.xiaohongshu.com/user/profile/{user_id}`、第 3 节里的四类短链，以及 24 或 29 位十六进制 `user_id`。作品 id 只有 24 位，29 位 id 不能用于详情或评论。
 
-### 4.6 使用提醒
+`limit` 为 0：只要博主信息和互动数据。大于 0：取笔记列表。不传 `--limit` 就是 0，不会返回作品。
 
-- 这个能力需要的是 **博主主页链接**，不是笔记详情链接。
-- 如果用户给的是一篇笔记的 URL，应改走笔记详情能力。
-- 如果需要做账号分析、主题归类、发文节奏总结，建议先取回作品列表，再继续二次处理。
+`results` 是对象：
 
----
+- `user`：`nickname`、`desc`、`ipLocation`（驼峰）、`user_id`、`red_id`、`share_link`、`follows`、`fans`、`interaction`（获赞与收藏）、`liked`（获赞）、`collected`（收藏）、`note_num_stat`（`liked` / `posted` / `collected`，文档未说明单项含义）
+- `note[]`：`id`、`xsec_token`、`type`、`title`、`desc`、`create_time`、`liked_count`、`likes`、`comments`、`nice`、`collected`、`share`、`view`、`cover`、`images`、`video`、`video_url`、`video_duration`
 
-## 5. 小红书笔记评论查询
+`likes` 和 `nice` 接口有返回，文档没有进一步说明。点赞、评论、收藏做比较时，用 `liked_count`、`comments`、`collected`，并先把字符串转成数字。粉丝和获赞看 `user.fans`、`user.liked`、`user.interaction`。
 
-### 5.1 适用场景
-
-适合这些任务：
-
-- 只想拉取某篇笔记的评论区内容
-- 拉取某篇小红书笔记的评论区做观点归纳或舆情分析
-- 做评论观点归纳、情绪分析或负面反馈识别
-- 统计某篇笔记评论区的高频主题
-- 分析一篇内容为什么表现好
-
-> 与「笔记详情」的区别：本能力只返回评论数据，不返回笔记正文与互动详情，适合专注评论分析的场景。
-
-### 5.2 基础语法
-
-```bash
-node src/xiaohongshu/comment-cli.js <小红书笔记链接> [选项]
-```
-
-也支持显式写法：
-
-```bash
-node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" [选项]
-```
-
-### 5.3 参数说明
-
-| 参数             | 说明                 | 取值 / 默认值                                        |
-| ---------------- | -------------------- | ---------------------------------------------------- |
-| `--url`, `-u`    | 小红书笔记链接，必填 | 建议使用笔记详情链接或可解析的短链                   |
-| `--expire`, `-e` | 有效评论天数筛选     | 建议显式传入 `1-4745`；若不传，则按脚本默认行为执行  |
-| `--limit`, `-l`  | 评论数量上限         | 建议显式传入 `1-10000`；若不传，则按脚本默认行为执行 |
-| `--help`, `-h`   | 显示帮助信息         | 无                                                   |
-
-### 5.4 链接建议
-
-优先使用以下形式：
-
-- `https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy`
-- `https://xhslink.com/m/xxx`
-
-使用建议：
-
-- 尽量使用完整的笔记链接。
-- 如果拿到的是短链，可以直接传入。
-- 如果拿到的是博主主页链接，应改走博主作品查询能力。
-
-### 5.5 推荐示例
-
-### 拉取单篇笔记评论
-
-```bash
-node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
-```
-
-#### 拉更多评论用于分析
+## 5. 笔记评论
 
 ```bash
 node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100
+node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30
+node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at "2026-10-01 12:00:00"
 ```
 
-#### 拉一年内评论，剔除一年前无效评论
+| 参数 | 说明 | 取值 / 默认 |
+| --- | --- | --- |
+| `--url` `-u` | 笔记链接或笔记 id，必填 | 见下方。含 `explore`、`discovery/item`、短链 |
+| `--expired_at` `-e` | 评论时间过滤 | 正整数天数，或 `YYYY-MM-DD HH:mm:ss`。不传则按北京时间近 6 年换算成一个时间点，创建和查询共用。`--expire` 与它相同 |
+| `--limit` `-l` | 评论数量 | `1–10000`，默认 `10` |
+| `--help` `-h` | 帮助 | 无 |
 
-```bash
-node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100 --expire 365
-```
+支持 `https://www.xiaohongshu.com/explore/{id}`、`https://www.xiaohongshu.com/discovery/item/{id}`、四类短链，以及 24 位笔记 id。
 
-#### 自然语言触发示例
+`expired_at` 过滤的是时间，不是页码。`limit` 为 10000 且 `expired_at` 为 1 时，也只返回近 1 天的评论。用户传入的值会原样出现在 `request.expired_at`。未传入时，命令换算的时间点也会写进这个字段。
 
-- 帮我拉一下这条小红书笔记的评论
-- 分析这条小红书笔记评论区都在讨论什么
-- 帮我总结这条小红书笔记评论区的主要观点
+`results` 是评论数组：`id`、`content`、`create_time`、`ip_location`、`like_count`、`user`（`user_id`、`nickname`、`red_id`）、`sub_comments`。回复只有一层，字段与评论相同。
 
-### 5.6 使用提醒
+## 6. 执行前
 
-- 这个能力需要的是 **笔记链接**，不是博主主页链接。
-- 如果用户只说“帮我分析评论区”，但没有链接，先追问笔记 URL。
-- 如果后续还要做情绪分析、观点聚类、评论摘要，可以先取回结构化结果，再交给上层流程处理。
+1. Node.js 16.14.0+
+2. 环境变量 `GUAIKEI_API_TOKEN`：16–256 位字母、数字、下划线或连字符
+3. 输入是关键词、笔记链接或博主链接中的一种
+4. 平台是小红书
 
----
+TOKEN 未配置时命令退出码为 3，不要先跑一遍试探。
 
-## 6. 环境与执行前检查
+## 7. 常见组合
 
-在执行任一能力前，先确认：
+选题：先按关键词搜索，再用笔记 `id` 拉详情，最后看标题、正文和 `tags` / `topics`。
 
-1. 已安装 Node.js 16.14.0+
-2. 已配置环境变量 `GUAIKEI_API_TOKEN`
-3. 输入的是关键词、笔记链接或博主链接中的一种
-4. 平台确实是小红书，不是其他社媒
+评论：详情拿正文，评论命令拿评论，再做归类。详情本身没有评论。
 
-如果缺少 `GUAIKEI_API_TOKEN`，应先提醒用户配置，再执行命令。
-
----
-
-## 7. 常见推荐用法
-
-### 7.1 选题调研
-
-- 先走关键词搜索
-- 再挑选高赞笔记做详情分析
-- 最后汇总标题、主题、互动特征
-
-### 7.2 评论洞察
-
-- 先获取笔记详情
-- 再获取评论区内容
-- 再做观点归类、情绪判断、负面反馈识别
-
-### 7.3 竞品或 KOL 监控
-
-- 先获取博主作品列表
-- 再分析更新频率、内容主题、互动表现
-
----
-
-## 8. 相关文档
-
-- 技能主说明：`SKILL.md`
-- 更新记录：`references/changelog.md`
-- 官网：<https://www.guaikei.com>
+竞品或 KOL：要作品列表就显式传 `--limit`。只要粉丝和获赞就用 `--limit 0`。

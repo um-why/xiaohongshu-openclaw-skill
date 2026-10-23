@@ -1,0 +1,36 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "小红书关键词搜索 - results 元素",
+    "description": "搜索成功时 results 数组中的一条。空字符串和数字 0 可能不返回。整份 stdout 见 output_envelope.schema.json。",
+    "properties": {
+        "id": { "type": "string", "description": "笔记 ID" },
+        "xsec_token": { "type": "string", "description": "接口字段，文档未进一步说明" },
+        "type": { "type": "string", "description": "笔记类型" },
+        "title": { "type": "string", "description": "笔记标题" },
+        "desc": { "type": "string", "description": "笔记描述" },
+        "publish_time": { "type": "string", "description": "发布时间" },
+        "timestamp": { "type": "string", "description": "发布时间戳" },
+        "user": {
+            "type": "object",
+            "description": "作者信息",
+            "properties": {
+                "user_id": { "type": "string", "description": "作者 ID" },
+                "nickname": { "type": "string", "description": "作者昵称" },
+                "xsec_token": { "type": "string", "description": "接口字段，文档未进一步说明" },
+                "red_id": { "type": "string", "description": "接口字段，文档未进一步说明" }
+            }
+        },
+        "liked_count": { "type": "string", "description": "点赞数" },
+        "collected_count": { "type": "string", "description": "收藏数" },
+        "comment_count": { "type": "string", "description": "评论数" },
+        "shared_count": { "type": "string", "description": "分享数" },
+        "image_list": {
+            "type": "array",
+            "description": "图片 URL 列表",
+            "items": { "type": "string", "description": "图片 URL" }
+        },
+        "video_url": { "type": "string", "description": "视频 URL" },
+        "video_duration": { "type": "string", "description": "视频时长" }
+    }
+}

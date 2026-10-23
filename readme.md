@@ -1,46 +1,47 @@
-# 📊 小红书洞察与竞品分析助手
+# 📕 小红书洞察与竞品分析助手
 
-> **一句话价值主张**：把「人工刷 2 小时小红书」变成「一条命令 30 秒」——输入关键词或链接，直接拿回结构化爆款数据，AI 接着就能帮你做选题、盯竞品、筛 KOL、读评论区。
+> 把「刷一小时小红书、再手工记点赞」换成「说一句话，拿回结构化数据」。关键词、笔记链接、博主主页都能查。AI 接着就能做选题、盯竞品、筛 KOL、读评论区。
 
-**4 大能力 · 单次最多 1 万条 · 无需登录小红书 · 无需部署，Node.js 一键运行**
+**只读公开数据 · 不登录你的小红书账号 · 单次最多 1 万条 · 装进 Agent 就能用人话说**
 
----
-
-## 😫 如果你在做小红书运营，这些场景你一定熟悉
-
-| 你的日常                    | 传统做法                                | 用本SKILL后                                      |
-| --------------------------- | --------------------------------------- | ------------------------------------------------ |
-| 找下周的选题方向            | 翻 50 条笔记，手动记点赞收藏，约 1 小时 | `search-cli` 一条命令返回 50 条结构化数据，30 秒 |
-| 盯竞品账号动更新了什么      | 每天手动刷对方主页                      | `post-cli` 直接拉作品列表 + 发布时间 + 互动数据  |
-| 判断一个 KOL 数据有没有注水 | 靠感觉、看粉丝量拍脑袋                  | 三项原始互动数值到手，评论/点赞比值一算便知      |
-| 摸清用户到底在吐槽什么      | 一条条往下翻评论区                      | `comment-cli` 一次拉全量评论，AI 直接做舆情归纳  |
-| 追今天刚起的热点            | 反复刷发现页碰运气                      | 「最新排序 + 一天内」精准捕获实时内容            |
+[开通小红书数据 TOKEN](https://www.guaikei.com) · 也可以加微信 `13395823479`（备注：小红书技能）
 
 ---
 
-## 🔥 为什么选它
+## 你现在大概率在做这些事
 
-- **🔒 安全**：不登录你的小红书账号，零封号风险——这是爬虫方案给不了的
-- **💪 强大**：单次最多拉取 **1 万条**数据，出参字段全面，可见即所得
-- **🎛️ 精准**：内容类型 / 排序 / 时间范围 / 数量四维筛选，直出你要的那批数据
-- **🪶 轻量**：零依赖、零部署，装好 Node.js 就能跑，Windows / macOS / Linux 通吃
-- **🤖 为 AI 而生**：标准 JSON 出参 + 完整 SKILL.md，WorkBuddy / Openclaw / Claude Code / Cursor 等 Agent 开箱即用
-- **📁 省心**：每次执行结果自动归档本地日志，写周报、做复盘直接翻记录
+| 你要的结果 | 手工怎么做 | 用这个技能 |
+| --- | --- | --- |
+| 下周选题 | 翻几十条笔记，自己记点赞和收藏 | 一条搜索命令拿回标题、正文摘要和互动数 |
+| 竞品这周发了什么 | 每天打开对方主页往下刷 | 博主作品列表，带发布时间和互动数 |
+| 这个 KOL 值不值得合作 | 看粉丝数拍脑袋 | 粉丝、获赞、收藏一起回来，转成数字再算比值 |
+| 评论区在说什么 | 一条条往下翻 | 一次拉评论，交给 AI 归纳观点 |
+| 今天刚起来的话题 | 反复刷发现页 | 「最新 + 一天内」直接筛出来 |
 
-## 🎯 核心能力一览
+数据回来之后，让 AI 继续做：标题公式、爆款归因、评论聚类、发文节奏、一份能发出去的报告。
 
-| 能力          | 输入     | 你拿到什么                                             |
-| ------------- | -------- | ------------------------------------------------------ |
-| 🔍 关键词搜索 | 关键词   | 笔记列表 + 作者 + 点赞/收藏/评论 + 可直接打开的链接    |
-| 📰 笔记详情   | 笔记链接 | 标题、正文、图片、互动数据、作者信息                   |
-| 💬 评论获取   | 笔记链接 | 评论内容 + 评论者 + 互动数据，支持按时间剔除过期评论   |
-| 👥 博主监控   | 主页链接 | 公开作品列表；`--limit 0` 时返回粉丝量、点赞量、收藏量 |
+---
 
-## 🚀 30 秒上手
+## 四件事，各用一条命令
 
-**第 1 步**：访问 [小红书实时数据获取技能官网](https://www.guaikei.com) 开通 TOKEN（数据 API 服务，开通即用）
+| 你要做的事 | 你拿到什么 |
+| --- | --- |
+| 🔍 关键词搜索 | 笔记列表。点赞、收藏、评论、分享都是字符串 |
+| 📰 笔记详情 | 标题、正文、图片、互动、作者。不含评论 |
+| 💬 评论 | 评论和评论者。可以按近 N 天，或某个时间之后 |
+| 👥 博主 | 不传数量时，只要粉丝、获赞、收藏。要作品列表时写上条数 |
 
-**第 2 步**：配置环境变量
+不登录、不发布、不点赞、不评论、不关注。私密笔记、草稿、创作者后台和投放后台都不在范围内。
+
+---
+
+## 三步开始
+
+**1. 开通 TOKEN**
+
+到[小红书数据接口官网](https://www.guaikei.com)开通，或微信 `13395823479`（备注：小红书技能）。TOKEN 是 16–256 位的字符串。
+
+**2. 配到环境变量**
 
 ```bash
 # Windows (PowerShell)
@@ -50,90 +51,131 @@ $env:GUAIKEI_API_TOKEN = "你的TOKEN"
 export GUAIKEI_API_TOKEN="你的TOKEN"
 ```
 
-**第 3 步**：跑第一条命令
+**3. 跑第一条，或直接对 AI 说人话**
 
 ```bash
-# 搜「露营装备」最近一周高赞图文，取 20 条
 node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --time 2 --limit 20
 ```
 
-更多命令示例：
+装进 WorkBuddy、Openclaw、QClaw、ima、Claude Code 或 Cursor 之后，可以这样说：
 
-```bash
-# 追热点：一天内最新内容
-node src/xiaohongshu/search-cli.js --keyword "多巴胺穿搭" --sort 1 --time 1 --limit 50
+- 「帮我找最近一周小红书露营装备的高赞图文，先看 20 条」
+- 「这篇笔记评论区近 30 天在吐槽什么」
+- 「这个博主多少粉丝，最近发了哪 30 条」
 
-# 拉一篇笔记的 200 条评论做舆情分析
-node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 200
+需要 Node.js 16.14.0 及以上，没有别的依赖。Windows、macOS、Linux 都可以。国内直连，不用代理。
 
-# 盯竞品：博主近 30 条作品
-node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy" --limit 30
+---
 
-# 查博主真实体量：粉丝量、点赞量、收藏量
-node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy" --limit 0
-```
+## 回来的数据长这样
 
-## 📦 数据长什么样
-
-每条结果都是标准 JSON，AI 可直接消化、程序可直接解析：
+成功、没有结果、失败，都是同一份 JSON。程序和 AI 都能直接读。
 
 ```json
 {
-  [
+  "status": "success",
+  "error_code": "OK",
+  "message": "搜索任务完成",
+  "timestamp": "2026/10/22 15:16:11",
+  "request": {
+    "command": "search",
+    "keyword": "露营装备",
+    "type": 2,
+    "sort": 2,
+    "time": 2,
+    "limit": 20
+  },
+  "metadata": {
+    "skill_version": "1.2.0",
+    "runtime_version": "22.x",
+    "execution_time": 34210
+  },
+  "results": [
     {
-      "id": "6a377...d46",
+      "id": "6a377d460000000000000000",
+      "xsec_token": "yyy",
       "title": "深圳奇妙日花费大概多少",
-      "desc": "奇妙日如果不买很多周边去互动 花门票钱进去能看到些什么呢？ 二编 奇妙日换成在深圳的了喔 #kpl奇妙日",
+      "desc": "奇妙日如果不买很多周边去互动……",
       "liked_count": "336",
       "collected_count": "128",
       "comment_count": "193",
       "shared_count": "45",
-      "user": { "nickname": "xxx", "user_id": "..." },
-      "image_list": [
-        "https://sns-na-i11.xhscdn.com/spectrum/...",
-        "https://sns-na-i11.xhscdn.com/spectrum/...",
-        "https://sns-na-i11.xhscdn.com/spectrum/..."
-      ],
+      "user": { "nickname": "xxx", "user_id": "66a8abcd0000000000000000" },
       "publish_time": "2026-09-08 20:06:00",
-      "timestamp": "1788870094000",
-      "type": "normal",
-      "url": "https://www.xiaohongshu.com/explore/...?xsec_token=..."
+      "type": "normal"
     }
   ]
 }
 ```
 
-> 拿到数据后，让 AI 继续做：标题公式提炼 → 爆款归因 → 评论区观点聚类 → 竞品发文节奏分析 → 生成报告，一条链路到底。
+打开某一条笔记时，用 `https://www.xiaohongshu.com/explore/{id}`。有 `xsec_token` 再接上 `?xsec_token=`。
 
-## ✨ 适用人群
+互动数是字符串，空字符串和数字 0 有时不会出现。比较之前先转成数字。搜索不写条数时是 20 条；看博主不写条数时，只有博主信息，没有作品列表。
 
-✅ 小红书内容创作者 / 运营 | ✅ 品牌营销 / 市场人员 | ✅ 数据分析师 | ✅ MCN 机构 / 博主经纪人 | ✅ AI Agent / 自动化工作流玩家
+---
 
-## 💬 购买前你可能想问
+## 谁会用它
 
-**Q：需要登录我的小红书账号吗？**
-不需要。全程只读取公开数据，你的账号与工具零接触，无风控、无封号风险。
+小红书创作者和运营、品牌市场、MCN 和博主经纪人、需要把公开内容喂给 Agent 的人。
 
-**Q：数据从哪来，合规吗？**
-数据经 [小红书洞察与竞品分析助手](https://www.guaikei.com) 官方数据接口返回，仅覆盖小红书**公开可见**内容。除关键词/链接等查询参数外，不上传本机任何数据。结果限个人/团队内部分析使用。
+它给的是公开数据，不替你做投放决策。判断还是你来。
 
-**Q：我在国内，网络有要求吗？**
-国内直连可用，无需代理。
+---
 
-**Q：一定要付费 TOKEN 吗？**
-是。数据接口由 guaikei.com 提供，需开通 TOKEN（16-256 位字符串）后使用，成本远低于同类 SaaS 数据平台年费。
+## 购买前你可能想问
 
-**Q：AI 工具里怎么用？**
-把本技能装进 WorkBuddy / Openclaw / QClaw / ima / Claude Code / Cursor，然后直接说人话：「帮我找最近一周小红书露营装备的高赞笔记」，Agent 会自动选对脚本、传对参数。
+**要登录我的小红书账号吗？**
+不用。这个技能不碰你的账号，也不做发布、点赞、评论、关注。
 
-## ⚠️ 诚实的边界说明
+**数据从哪来？**
+经[小红书公开数据接口](https://www.guaikei.com)返回，只覆盖小红书公开可见的内容。除了关键词和链接这类查询参数，不上传你电脑上的其他数据。结果请在个人或团队内部分析时使用。
 
-- 仅支持小红书**公开数据**：私密笔记、草稿、创作者后台数据（涨粉曲线、粉丝画像）、商业化数据（报价、聚光后台）均不支持，也不会支持
-- 不提供任何写操作（发布/点赞/评论/关注）
-- 不替你做营销决策——工具给数据，判断权在你
+**一定要 TOKEN 吗？**
+要。接口按 TOKEN 调用。开通入口在[小红书数据 TOKEN 开通页](https://www.guaikei.com)，也可以微信 `13395823479`。
 
-## 📞 帮助与支持
+**查一条要等多久？**
+小批量通常一轮查询就能回来。条数大、或者任务还在处理时，命令会继续等，屏幕上的「处理中」不是失败。等命令结束再看结果。
 
-- TOKEN 开通 / 使用帮助：[小红书实时数据获取官网](https://www.guaikei.com)
-- 问题反馈：[GitHub Issues](https://github.com/um-why/xiaohongshu-openclaw-skill/issues)
-- 完整参数说明：[references/options.md](references/options.md) &nbsp;|&nbsp; 更新日志：[references/changelog.md](references/changelog.md)
+**AI 会不会查错平台？**
+技能说明里写明了：只处理小红书。抖音、快手、B 站、微博、公众号不会走这里。
+
+**我在国内，要代理吗？**
+不用。
+
+---
+
+## 边界
+
+- 公开笔记、评论、博主信息。私密、草稿、仅粉丝可见、创作者后台、商业化后台都不支持
+- 不做写操作
+- 单次最多 1 万条。用户没说要多少时，搜索默认 20，评论默认 10，博主默认只看资料
+
+---
+
+## 再跑几条
+
+```bash
+# 一天内最新
+node src/xiaohongshu/search-cli.js --keyword "多巴胺穿搭" --sort 1 --time 1 --limit 50
+
+# 近 30 天评论
+node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30 --limit 200
+
+# 博主近 30 条作品
+node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 30
+
+# 只看粉丝、获赞、收藏
+node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 0
+```
+
+参数表：[references/options.md](references/options.md) · 排查：[references/troubleshooting.md](references/troubleshooting.md) · 更新：[references/changelog.md](references/changelog.md)
+
+成功结果会记在系统临时目录的 `xiaohongshu-guaikei/logs/当天日期/`，不写进技能目录。
+
+---
+
+## 现在就可以开通
+
+[去小红书数据接口官网开通 TOKEN](https://www.guaikei.com)
+
+微信 `13395823479`（备注：小红书技能）· 问题反馈 [GitHub Issues](https://github.com/um-why/xiaohongshu-openclaw-skill/issues)

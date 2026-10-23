@@ -2,13 +2,20 @@
  * 通用 CLI 参数解析器
  */
 
+function isNumberToken(value) {
+  return /^-?\d+(\.\d+)?$/.test(value);
+}
+
 function readValueAfterFlag(args, index, flagName, def) {
   const next = args[index + 1];
   if (next === undefined) throw new Error(`参数 ${flagName} 缺少值`);
-  if (/^--[a-zA-Z]/.test(next)) {
+  const numeric = def && def.type === "number";
+  const looksLikeFlag =
+    /^--[a-zA-Z]/.test(next) || (/^-[a-zA-Z]/.test(next) && !numeric);
+  if (looksLikeFlag) {
     throw new Error(`参数 ${flagName} 缺少值（下一个 token 是 ${next}）`);
   }
-  if (def && def.type === "number" && !/^-?\d+(\.\d+)?$/.test(next)) {
+  if (numeric && !isNumberToken(next)) {
     throw new Error(`参数 ${flagName} 需要数字，收到: "${next}"`);
   }
   return next;
@@ -28,7 +35,7 @@ function readValueAfterFlag(args, index, flagName, def) {
 function parseArgs(args, schema) {
   const result = {};
   const seen = new Set();
-  const warnings = [];
+  let positionalSet = false;
 
   for (const def of Object.values(schema.flags)) {
     if (def.default !== undefined) result[def.key] = def.default;
@@ -63,13 +70,9 @@ function parseArgs(args, schema) {
     if (matched) {
       const { flag, def } = matched;
       if (seen.has(def.key)) throw new Error(`参数 ${flag} 重复指定`);
-      if (
-        schema.positionalKey === def.key &&
-        result[def.key] !== undefined &&
-        !seen.has(def.key)
-      ) {
-        warnings.push(
-          `位置参数 "${result[def.key]}" 与 ${flag} 冲突，将保留 ${flag} 的值`,
+      if (schema.positionalKey === def.key && positionalSet) {
+        throw new Error(
+          `位置参数 "${result[def.key]}" 与 ${flag} 重复, 请只保留一种写法`,
         );
       }
       seen.add(def.key);
@@ -80,33 +83,38 @@ function parseArgs(args, schema) {
         let rawValue;
         if (inlineValue !== null) {
           if (inlineValue === "") throw new Error(`参数 ${flag} 缺少值`);
+          if (def.type === "number" && !isNumberToken(inlineValue)) {
+            throw new Error(`参数 ${flag} 需要数字，收到: "${inlineValue}"`);
+          }
           rawValue = inlineValue;
         } else {
           rawValue = readValueAfterFlag(args, i, arg, def);
           i++;
         }
-        result[def.key] = def.transform ? def.transform(rawValue) : rawValue;
+        const transformed = def.transform ? def.transform(rawValue) : rawValue;
+        if (
+          def.type === "number" &&
+          (typeof transformed !== "number" || !Number.isFinite(transformed))
+        ) {
+          throw new Error(`参数 ${flag} 需要数字，收到: "${rawValue}"`);
+        }
+        result[def.key] = transformed;
       }
     } else if (!arg.startsWith("-")) {
-      if (schema.positionalKey) {
-        if (
-          result[schema.positionalKey] === undefined ||
-          !seen.has(schema.positionalKey)
-        ) {
-          // 位置参数与显式 flag 冲突时告警而非静默覆盖
-          if (result[schema.positionalKey] !== undefined) {
-            warnings.push(
-              `位置参数 "${arg}" 与已解析值冲突，将保留 "${result[schema.positionalKey]}"`,
-            );
-          } else {
-            result[schema.positionalKey] = arg;
-          }
-        } else {
-          warnings.push(`已通过 flag 指定，忽略多余位置参数: "${arg}"`);
-        }
-      } else {
+      if (!schema.positionalKey) {
         throw new Error(`未识别的位置参数: ${arg}`);
       }
+      const key = schema.positionalKey;
+      if (seen.has(key)) {
+        throw new Error(`已通过 flag 指定 ${key}, 多余的位置参数: "${arg}"`);
+      }
+      if (positionalSet) {
+        throw new Error(
+          `位置参数重复: "${arg}"（已收到 "${result[key]}"）。含空格的值请加引号`,
+        );
+      }
+      result[key] = arg;
+      positionalSet = true;
     } else {
       const known = Object.keys(schema.flags).join(", ");
       throw new Error(`未识别的选项: ${arg}（可用: ${known}, --help）`);
@@ -122,7 +130,6 @@ function parseArgs(args, schema) {
     }
   }
 
-  if (warnings.length) result._warnings = warnings;
   return result;
 }
 

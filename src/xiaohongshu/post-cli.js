@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 
-const constants = require("../config/constants");
-const key = require("../utils/key");
-const log = require("../utils/log");
 const post = require("../api/post");
+const log = require("../utils/log");
+const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/url");
+const { assertIntegerRange } = require("../validate/keyword");
 const { parseArgs, buildHelp } = require("../utils/args");
+const {
+  emitError,
+  emitEmpty,
+  printSuccessEnvelope,
+  emitUncaught,
+} = require("../utils/output");
 
 const SCHEMA = {
   flags: {
@@ -15,34 +21,48 @@ const SCHEMA = {
       key: "url",
       type: "string",
       required: true,
-      desc: "小红书博主链接",
+      desc: "博主主页链接或 user_id",
     },
     "--limit": {
       alias: "-l",
       key: "limit",
       type: "number",
-      default: 10,
+      default: 0,
       transform: (v) => Number(v),
-      desc: "主页笔记数量, 0-10000",
+      desc: "笔记数量, 0-10000; 0 表示只取博主信息和互动数据",
     },
   },
   positionalKey: "url",
 };
+
+const AUTH_MESSAGE =
+  "GUAIKEI_API_TOKEN 未配置或格式无效。须为 16-256 位字母、数字、下划线或连字符; 可通过 https://www.guaikei.com 自助开通";
+
+const URL_MESSAGE =
+  "无法识别博主主页链接。支持: https://www.xiaohongshu.com/user/profile/{user_id}、https://xhslink.com/o/*、https://xhslink.cn/o/*、https://xhslink.com/m/*、https://xhslink.cn/m/*，或 24 / 29 位 user_id";
+
 function printHelp() {
-  console.error(
+  process.stderr.write(
     buildHelp(
       SCHEMA,
-      "node src/xiaohongshu/post-cli.js <小红书博主链接> [选项]",
+      "node src/xiaohongshu/post-cli.js <博主主页链接> [选项]",
       [
-        'node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy"',
+        'node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx"',
+        'node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 20',
       ],
     ) +
       "\n\n注意:\n" +
-      "  - 小红书博主链接是小红书可公开访问的博主主页链接\n" +
-      "  - 请确保环境变量 GUAIKEI_API_TOKEN 已配置\n" +
-      "  - 主页笔记数量限制: 0-10000, 默认10\n" +
-      "  - 主页笔记数量为0时, 则获取博主的互动数据: 粉丝量、点赞量、收藏量等\n",
+      "  - 这是博主主页链接，不是笔记链接\n" +
+      "  - 不传 --limit 时默认为 0，只返回博主信息和互动数据\n" +
+      "  - 数量若不在 0-10000，命令会直接失败，不会改成默认值后继续请求\n",
   );
+}
+
+function isEmptyPost(task) {
+  if (!task || typeof task !== "object") return true;
+  const hasNotes = Array.isArray(task.note) && task.note.length > 0;
+  const hasUser = task.user && Object.keys(task.user).length > 0;
+  return !hasNotes && !hasUser;
 }
 
 async function main() {
@@ -50,7 +70,8 @@ async function main() {
   const args = process.argv.slice(2);
   if (args.length === 0) {
     printHelp();
-    process.exit(0);
+    emitError("post", "INVALID_ARGS", "缺少命令参数", 2, startTime);
+    return;
   }
 
   let parsed;
@@ -59,116 +80,107 @@ async function main() {
   } catch (error) {
     utils.printError(`参数解析失败: ${error.message}`);
     printHelp();
-    process.exit(1);
+    emitError(
+      "post",
+      "INVALID_ARGS",
+      `参数解析错误: ${error.message}`,
+      2,
+      startTime,
+    );
+    return;
   }
   if (parsed._warnings) {
     for (const w of parsed._warnings) utils.printWarn(w);
   }
   if (parsed._help) {
     printHelp();
-    process.exit(0);
+    return;
   }
 
   let { url, limit } = parsed;
+  const urlRaw = url;
 
   utils.printBanner();
-  utils.printInfo(`小红书博主链接: ${url}`);
-  const isRight = validator.isProfileUrl(url);
-  if (!isRight) {
-    utils.printError(
-      `小红书博主链接格式无效, 支持: https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy, http://xhslink.com/m/xxx`,
-    );
-    process.exit(1);
+  utils.printInfo(`原始链接: ${urlRaw}`);
+  if (!validator.isProfileUrl(url)) {
+    utils.printError(URL_MESSAGE);
+    emitError("post", "INVALID_URL", URL_MESSAGE, 1, startTime, {
+      command: "post",
+      url_raw: urlRaw,
+    });
+    return;
   }
   url = validator.normalizeUrl(url);
-  if (!Number.isInteger(limit) || limit < 0 || limit > 10000) {
-    limit = 10;
+  utils.printInfo(`规范后的链接: ${url}`);
+  try {
+    limit = assertIntegerRange(limit, 0, 10000, "笔记数量 limit");
+  } catch (error) {
+    utils.printError(error.message);
+    emitError("post", "INVALID_ARGS", error.message, 2, startTime, {
+      command: "post",
+      url_raw: urlRaw,
+      url,
+      limit,
+    });
+    return;
   }
-  utils.printInfo(`主页笔记数量限制: ${limit}`);
+  utils.printInfo(`笔记数量限制: ${limit}`);
 
   const token = key.skillKey(process.env.GUAIKEI_API_TOKEN);
-  if (token === "") process.exit(1);
+  if (token === "") {
+    emitError("post", "AUTH_REQUIRED", AUTH_MESSAGE, 3, startTime, {
+      command: "post",
+      url_raw: urlRaw,
+      url,
+      limit,
+    });
+    return;
+  }
+
+  const postRequest = { command: "post", url_raw: urlRaw, url, limit };
   let postTask = null;
   try {
     await post.createPostTask(token, url, limit);
-    utils.printSuccess(`主页笔记任务创建成功, 正在获取中...`);
-
+    utils.printSuccess("博主笔记任务创建成功, 正在获取中...");
     postTask = await post.getPostTask(token, url, limit);
   } catch (error) {
-    const errorOutput = {
-      status: "error",
-      error_code: error.code || "UNKNOWN",
-      message: error.message,
-      timestamp: new Date().toISOString(),
-      request: {
-        command: "post",
-        url: url,
-        limit: limit,
-      },
-      skill_metadata: {
-        skill_version: constants.VERSION,
-        runtime_version: process.versions.node,
-        execution_time: Date.now() - startTime,
-      },
-      results: null,
-    };
-    process.stdout.write(JSON.stringify(errorOutput, null, 2) + "\n", () =>
-      process.exit(1),
+    utils.printError(`获取博主笔记失败: ${error.message}`);
+    emitError(
+      "post",
+      error.code || "UNKNOWN",
+      error.message,
+      error.name === "AuthError" ? 3 : 1,
+      startTime,
+      postRequest,
     );
     return;
   }
-  if (!postTask) {
-    utils.printError(`主页笔记任务没有返回结果, 请稍后重试或联系开发者`);
-    const emptyOutput = {
-      status: "empty",
-      error_code: "NOT_FOUND",
-      message: "没有找到匹配的博主笔记",
-      timestamp: new Date().toISOString(),
-      request: {
-        command: "post",
-        url: url,
-        limit: limit,
-      },
-      skill_metadata: {
-        skill_version: constants.VERSION,
-        runtime_version: process.versions.node,
-        execution_time: Date.now() - startTime,
-      },
-      results: null,
-    };
-    process.stdout.write(JSON.stringify(emptyOutput, null, 2) + "\n", () =>
-      process.exit(1),
-    );
+
+  if (isEmptyPost(postTask)) {
+    utils.printInfo("没有找到匹配的博主或笔记");
+    emitEmpty("没有找到匹配的博主或笔记", startTime, postRequest);
     return;
   }
-  // 输出博主笔记结果
-  const finalOutput = {
-    status: "success",
-    error_code: "OK",
-    message: "博主笔记任务完成",
-    timestamp: new Date().toISOString(),
-    request: {
-      command: "post",
-      url: url,
-      limit: limit,
-    },
-    skill_metadata: {
-      skill_version: constants.VERSION,
-      runtime_version: process.versions.node,
-      execution_time: Date.now() - startTime,
-    },
-    results: postTask,
-  };
-  console.log(JSON.stringify(finalOutput, null, 2));
-  utils.printSuccess(`博主笔记任务完成, 已返回结果`);
+
+  const { text } = printSuccessEnvelope(
+    "博主笔记任务完成",
+    startTime,
+    postRequest,
+    postTask,
+  );
+  const noteCount = Array.isArray(postTask.note) ? postTask.note.length : 0;
+  const hasUser = Boolean(postTask.user && Object.keys(postTask.user).length);
+  utils.printSuccess(
+    `博主笔记任务完成, 笔记 ${noteCount} 条${hasUser ? ", 含博主信息" : ""}`,
+  );
 
   await log.taskWrite(
     `${startTime}_${validator.url2Name(url)}_post.json`,
-    JSON.stringify(finalOutput, null, 2),
+    text,
   );
 }
 
 main().catch((error) => {
-  utils.printError(error.message);
-  process.exit(1);
+  utils.printError(error.message || String(error));
+  emitUncaught("post", error);
 });

@@ -1,81 +1,62 @@
 /**
- * 小红书笔记详情和评论模块
+ * 小红书笔记详情模块
  */
 const constants = require("../config/constants");
-const { postJson, getJson } = require("../utils/request");
-const { withRetry } = require("../utils/retry");
-const utils = require("../utils/utils");
+const { requestApi, pollTaskResult } = require("../utils/request");
+const { SkillError } = require("../utils/errors");
 
 /**
- * 创建小红书笔记详情及评论任务
- * @param {string} token - API令牌
- * @param {string} url - 笔记链接
- * @returns {Promise<Object>} 详情任务状态
- * @throws {Error} API调用失败时抛出错误
+ * 创建小红书笔记详情任务
+ * @param {string} token
+ * @param {string} url
+ * @returns {Promise<object>}
  */
 async function createDetailTask(token, url) {
-  return await withRetry(
-    async () => {
-      return await postJson(
-        "/api/xiaohongshu/detail/url",
-        { _: Date.now() },
-        { url: url },
-        token,
-      );
-    },
+  return await requestApi(
+    "POST",
+    "/api/xiaohongshu/detail/url",
+    { _: Date.now() },
+    { url },
+    token,
     constants.CREATE_MAX_ATTEMPTS,
-    (attempt, err) => {
-      utils.printError(
-        `【创建任务重试】 ${attempt + 1}/${constants.CREATE_MAX_ATTEMPTS} 次 - ${err.message}`,
-      );
-    },
+    "创建任务",
   );
 }
 
 /**
- * 获取小红书笔记详情及评论任务结果
- * @param {string} token - API令牌
- * @param {string} url - 笔记链接
- * @returns {Promise<Object>} 详情结果对象
- * @throws {Error} API调用失败时抛出错误
+ * 丢掉接口可能带回的 error 字段。只有 error、没有笔记 id 时视为业务失败。
+ * @param {object} data
+ * @returns {object|null}
+ */
+function processDetail(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new SkillError("API_ERROR", "详情结果格式错误: data 不是对象", true);
+  }
+  const errorText = typeof data.error === "string" ? data.error.trim() : "";
+  const result = { ...data };
+  delete result.error;
+  if (!result.id) {
+    if (errorText) {
+      throw new SkillError("API_ERROR", errorText, true);
+    }
+    return null;
+  }
+  return result;
+}
+
+/**
+ * 获取小红书笔记详情。返回接口 data 对象，不追加文档以外的字段。
+ * @returns {Promise<object|null>}
  */
 async function getDetailTask(token, url) {
-  return await withRetry(
-    async () => {
-      const res = await getJson(
-        "/api/xiaohongshu/detail/info",
-        {
-          _: Date.now(),
-          url: url,
-        },
-        token,
-      );
-      if (!res.data || typeof res.data !== "object") {
-        throw new Error(`详情结果格式错误: data 不是对象类型`);
-      }
-      if (res.data.id && res.data.xsec_token) {
-        res.data.url =
-          "https://www.xiaohongshu.com/explore/" +
-          res.data.id +
-          "?xsec_token=" +
-          res.data.xsec_token;
-      }
-      if (res.data.user && res.data.user.user_id && res.data.user.xsec_token) {
-        res.data.user.url =
-          "https://www.xiaohongshu.com/user/profile/" +
-          res.data.user.user_id +
-          "?xsec_token=" +
-          res.data.user.xsec_token;
-      }
-      return res.data;
-    },
-    constants.QUERY_MAX_ATTEMPTS,
-    (attempt, err) => {
-      utils.printError(
-        `【查询任务重试】 ${attempt + 1}/${constants.QUERY_MAX_ATTEMPTS} 次 - ${err.message}`,
-      );
-    },
+  const response = await pollTaskResult(
+    "/api/xiaohongshu/detail/info",
+    { url },
+    token,
+    "查询任务",
   );
+  if (response.data == null) return null;
+  return processDetail(response.data);
 }
 
 module.exports = {

@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 
-const constants = require("../config/constants");
 const comment = require("../api/comment");
 const log = require("../utils/log");
 const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/url");
+const { assertIntegerRange } = require("../validate/keyword");
 const { parseArgs, buildHelp } = require("../utils/args");
+const {
+  emitError,
+  emitEmpty,
+  printSuccessEnvelope,
+  emitUncaught,
+} = require("../utils/output");
 
 const SCHEMA = {
   flags: {
@@ -15,15 +21,18 @@ const SCHEMA = {
       key: "url",
       type: "string",
       required: true,
-      desc: "笔记链接",
+      desc: "笔记链接或笔记 id",
+    },
+    "--expired_at": {
+      alias: "-e",
+      key: "expired_at",
+      type: "string",
+      desc: "近 N 天, 或 YYYY-MM-DD HH:mm:ss 之后; 不传则按近 6 年换算",
     },
     "--expire": {
-      alias: "-e",
-      key: "expire",
-      type: "number",
-      default: 2190,
-      transform: (v) => Number(v),
-      desc: "有效评论天数, 单位: 天",
+      key: "expired_at",
+      type: "string",
+      desc: "同 --expired_at",
     },
     "--limit": {
       alias: "-l",
@@ -37,16 +46,30 @@ const SCHEMA = {
   positionalKey: "url",
 };
 
+const AUTH_MESSAGE =
+  "GUAIKEI_API_TOKEN 未配置或格式无效。须为 16-256 位字母、数字、下划线或连字符; 可通过 https://www.guaikei.com 自助开通";
+
+const URL_MESSAGE =
+  "无法识别笔记链接。支持: https://www.xiaohongshu.com/explore/{id}、https://www.xiaohongshu.com/discovery/item/{id}、https://xhslink.com/o/*、https://xhslink.cn/o/*、https://xhslink.com/m/*、https://xhslink.cn/m/*，或 24 位笔记 id";
+
 function printHelp() {
-  console.error(
+  process.stderr.write(
     buildHelp(SCHEMA, "node src/xiaohongshu/comment-cli.js <笔记链接> [选项]", [
-      'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"',
+      'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --limit 100',
+      'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30',
+      'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at "2026-10-01 12:00:00"',
     ]) +
       "\n\n注意:\n" +
-      "  - 笔记链接是小红书可公开访问的笔记链接\n" +
-      "  - 即使用 'node src/xiaohongshu/search-cli.js <关键词>' 获取到的出参 url 值所代表的笔记链接\n" +
-      "  - 请确保环境变量 GUAIKEI_API_TOKEN 已配置\n",
+      "  - 这是笔记链接，不是博主主页链接\n" +
+      "  - --expired_at 不传时，按北京时间近 6 年换算成一个时间点，创建和查询共用\n" +
+      "  - 天数和数量若不合法，命令会直接失败，不会改成默认值后继续请求\n",
   );
+}
+
+function commentRequest(urlRaw, url, expiredAt, limit) {
+  const request = { command: "comment", url_raw: urlRaw, url, limit };
+  if (expiredAt !== undefined) request.expired_at = expiredAt;
+  return request;
 }
 
 async function main() {
@@ -54,7 +77,8 @@ async function main() {
   const args = process.argv.slice(2);
   if (args.length === 0) {
     printHelp();
-    process.exit(0);
+    emitError("comment", "INVALID_ARGS", "缺少命令参数", 2, startTime);
+    return;
   }
 
   let parsed;
@@ -63,132 +87,112 @@ async function main() {
   } catch (error) {
     utils.printError(`参数解析失败: ${error.message}`);
     printHelp();
-    process.exit(1);
+    emitError(
+      "comment",
+      "INVALID_ARGS",
+      `参数解析错误: ${error.message}`,
+      2,
+      startTime,
+    );
+    return;
   }
   if (parsed._warnings) {
     for (const w of parsed._warnings) utils.printWarn(w);
   }
   if (parsed._help) {
     printHelp();
-    process.exit(0);
+    return;
   }
 
-  let { url, expire, limit } = parsed;
+  let { url, expired_at: expiredAt, limit } = parsed;
+  const urlRaw = url;
 
   utils.printBanner();
-  utils.printInfo(`笔记链接: ${url}`);
-  const isRight = validator.isNoteUrl(url);
-  if (!isRight) {
-    utils.printError(
-      `笔记链接格式无效, 支持: https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy, http://xhslink.com/m/xxx`,
-    );
-    process.exit(1);
+  utils.printInfo(`原始链接: ${urlRaw}`);
+  if (!validator.isCommentUrl(url)) {
+    utils.printError(URL_MESSAGE);
+    emitError("comment", "INVALID_URL", URL_MESSAGE, 1, startTime, {
+      command: "comment",
+      url_raw: urlRaw,
+    });
+    return;
   }
   url = validator.normalizeUrl(url);
-  if (!Number.isInteger(expire) || expire <= 0 || expire > 4745) {
-    expire = 2190;
+  utils.printInfo(`规范后的链接: ${url}`);
+
+  try {
+    expiredAt = validator.assertExpiredAt(expiredAt);
+    if (expiredAt === undefined) expiredAt = validator.defaultExpiredAt();
+    limit = assertIntegerRange(limit, 1, 10000, "评论数量 limit");
+  } catch (error) {
+    utils.printError(error.message);
+    emitError("comment", "INVALID_ARGS", error.message, 2, startTime, {
+      command: "comment",
+      url_raw: urlRaw,
+      url,
+      expired_at: expiredAt,
+      limit,
+    });
+    return;
   }
-  utils.printInfo(`有效评论天数: ${expire}`);
-  if (!Number.isInteger(limit) || limit <= 0 || limit > 10000) {
-    limit = 10;
-  }
+  utils.printInfo(`评论时间过滤: ${expiredAt}`);
   utils.printInfo(`评论数量限制: ${limit}`);
-  let expireTime = new Date().setDate(new Date().getDate() - expire);
-  expireTime = new Date(expireTime);
-  expire =
-    expireTime.getFullYear() +
-    "-" +
-    String(expireTime.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(expireTime.getDate()).padStart(2, "0") +
-    " 00:00:00";
 
   const token = key.skillKey(process.env.GUAIKEI_API_TOKEN);
-  if (token === "") process.exit(1);
+  if (token === "") {
+    emitError(
+      "comment",
+      "AUTH_REQUIRED",
+      AUTH_MESSAGE,
+      3,
+      startTime,
+      commentRequest(urlRaw, url, expiredAt, limit),
+    );
+    return;
+  }
+
+  const request = commentRequest(urlRaw, url, expiredAt, limit);
   let commentTask = null;
   try {
-    await comment.createCommentTask(token, url, expire, limit);
-    utils.printSuccess(`评论任务创建成功, 正在获取中...`);
-
-    commentTask = await comment.getCommentTask(token, url, expire, limit);
+    await comment.createCommentTask(token, url, expiredAt, limit);
+    utils.printSuccess("评论任务创建成功, 正在获取中...");
+    commentTask = await comment.getCommentTask(token, url, expiredAt, limit);
   } catch (error) {
-    const errorOutput = {
-      status: "error",
-      error_code: error.code || "UNKNOWN",
-      message: error.message,
-      timestamp: new Date().toISOString(),
-      request: {
-        command: "comment",
-        url: url,
-        expire: expire,
-        limit: limit,
-      },
-      skill_metadata: {
-        skill_version: constants.VERSION,
-        runtime_version: process.versions.node,
-        execution_time: Date.now() - startTime,
-      },
-      results: null,
-    };
-    process.stdout.write(JSON.stringify(errorOutput, null, 2) + "\n", () =>
-      process.exit(1),
+    utils.printError(`获取评论失败: ${error.message}`);
+    emitError(
+      "comment",
+      error.code || "UNKNOWN",
+      error.message,
+      error.name === "AuthError" ? 3 : 1,
+      startTime,
+      request,
     );
     return;
   }
-  if (!commentTask) {
-    utils.printError(`评论任务没有返回结果, 请稍后重试或联系开发者`);
-    const emptyOutput = {
-      status: "empty",
-      error_code: "NOT_FOUND",
-      message: "没有找到匹配的评论内容",
-      timestamp: new Date().toISOString(),
-      request: {
-        command: "comment",
-        url: url,
-        expire: expire,
-        limit: limit,
-      },
-      skill_metadata: {
-        skill_version: constants.VERSION,
-        runtime_version: process.versions.node,
-        execution_time: Date.now() - startTime,
-      },
-      results: null,
-    };
-    process.stdout.write(JSON.stringify(emptyOutput, null, 2) + "\n", () =>
-      process.exit(1),
-    );
+
+  if (!Array.isArray(commentTask) || commentTask.length === 0) {
+    utils.printInfo("没有找到匹配的评论");
+    emitEmpty("没有找到匹配的评论", startTime, request);
     return;
   }
-  // 输出搜索结果
-  const finalOutput = {
-    status: "success",
-    error_code: "OK",
-    message: "评论任务完成",
-    timestamp: new Date().toISOString(),
-    request: {
-      command: "comment",
-      url: url,
-      expire: expire,
-      limit: limit,
-    },
-    skill_metadata: {
-      skill_version: constants.VERSION,
-      runtime_version: process.versions.node,
-      execution_time: Date.now() - startTime,
-    },
-    results: commentTask,
-  };
-  console.log(JSON.stringify(finalOutput, null, 2));
-  utils.printSuccess(`评论任务完成, 已返回结果`);
+
+  const { payload: finalOutput, text } = printSuccessEnvelope(
+    "评论任务完成",
+    startTime,
+    request,
+    commentTask,
+  );
+  utils.printSuccess(
+    `评论任务完成, 共返回 ${finalOutput.results.length} 条结果`,
+  );
 
   await log.taskWrite(
     `${startTime}_${validator.url2Name(url)}_comment.json`,
-    JSON.stringify(finalOutput, null, 2),
+    text,
   );
 }
 
 main().catch((error) => {
-  utils.printError(error.message);
-  process.exit(1);
+  utils.printError(error.message || String(error));
+  emitUncaught("comment", error);
 });

@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "小红书笔记评论 - results 元素",
+    "description": "评论成功时 results 数组中的一条。空字符串和数字 0 可能不返回。整份 stdout 见 output_envelope.schema.json。",
+    "properties": {
+        "id": { "type": "string", "description": "评论 ID" },
+        "content": { "type": "string", "description": "评论内容" },
+        "create_time": { "type": "string", "description": "评论时间" },
+        "ip_location": { "type": "string", "description": "评论者 IP 省份" },
+        "like_count": { "type": "string", "description": "点赞数" },
+        "user": {
+            "type": "object",
+            "description": "评论者信息",
+            "properties": {
+                "user_id": { "type": "string", "description": "评论者 ID" },
+                "nickname": { "type": "string", "description": "评论者昵称" },
+                "red_id": { "type": "string", "description": "接口字段，文档未进一步说明" }
+            }
+        },
+        "sub_comments": {
+            "type": "array",
+            "description": "评论回复。只有一层，元素字段与评论本身相同",
+            "items": { "type": "object" }
+        }
+    }
+}

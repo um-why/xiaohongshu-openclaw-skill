@@ -1,0 +1,69 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "小红书博主笔记 - results 对象",
+    "description": "作品成功时的 results。含 note（笔记列表）和 user（博主信息）。limit 为 0 时通常只有 user。空字符串和数字 0 可能不返回。接口返回的 error 不会进入 stdout。整份 stdout 见 output_envelope.schema.json。",
+    "properties": {
+        "note": {
+            "type": "array",
+            "description": "笔记列表",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "description": "笔记 ID" },
+                    "xsec_token": { "type": "string", "description": "接口字段，文档未进一步说明" },
+                    "type": { "type": "string", "description": "笔记类型" },
+                    "title": { "type": "string", "description": "笔记标题" },
+                    "desc": { "type": "string", "description": "笔记描述" },
+                    "create_time": { "type": "string", "description": "发布时间" },
+                    "liked_count": { "type": "string", "description": "点赞数" },
+                    "likes": { "type": "string", "description": "接口字段，文档未进一步说明" },
+                    "comments": { "type": "string", "description": "评论数" },
+                    "nice": { "type": "string", "description": "接口字段，文档未进一步说明" },
+                    "collected": { "type": "string", "description": "收藏数" },
+                    "share": { "type": "string", "description": "分享数" },
+                    "view": { "type": "string", "description": "查看数" },
+                    "cover": { "type": "string", "description": "封面 URL" },
+                    "images": {
+                        "type": "array",
+                        "description": "图片 URL 列表",
+                        "items": { "type": "string", "description": "图片 URL" }
+                    },
+                    "video": {
+                        "type": "array",
+                        "description": "视频 URL 列表",
+                        "items": { "type": "string", "description": "视频 URL" }
+                    },
+                    "video_url": { "type": "string", "description": "视频 URL" },
+                    "video_duration": { "type": "string", "description": "视频时长" }
+                }
+            }
+        },
+        "user": {
+            "type": "object",
+            "description": "博主信息",
+            "properties": {
+                "nickname": { "type": "string", "description": "博主昵称" },
+                "desc": { "type": "string", "description": "博主签名" },
+                "ipLocation": { "type": "string", "description": "博主 IP 省份" },
+                "user_id": { "type": "string", "description": "博主 ID" },
+                "red_id": { "type": "string", "description": "接口字段，文档未进一步说明" },
+                "share_link": { "type": "string", "description": "博主主页 URL" },
+                "follows": { "type": "string", "description": "关注数" },
+                "fans": { "type": "string", "description": "粉丝数" },
+                "interaction": { "type": "string", "description": "获赞与收藏数" },
+                "liked": { "type": "string", "description": "获赞数" },
+                "collected": { "type": "string", "description": "收藏数" },
+                "note_num_stat": {
+                    "type": "object",
+                    "description": "笔记数统计。单项含义文档未说明",
+                    "properties": {
+                        "liked": { "type": "string", "description": "文档未说明" },
+                        "posted": { "type": "string", "description": "文档未说明" },
+                        "collected": { "type": "string", "description": "文档未说明" }
+                    }
+                }
+            }
+        }
+    }
+}

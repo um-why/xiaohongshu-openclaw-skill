@@ -15,6 +15,7 @@ function localDateStr() {
 }
 
 async function taskWrite(filename, content) {
+  if (process.env.XHS_GUAIKEI_DISABLE_LOG === "1") return;
   if (!filename || typeof filename !== "string") {
     utils.printError("日志文件名必须是非空字符串");
     return;

@@ -1,5 +1,12 @@
 const constants = require("../config/constants");
 
+/**
+ * 重试执行函数。error.noRetry 为 true 时立即抛出。
+ * @param {function} fn
+ * @param {number} maxAttempts
+ * @param {function} [errorHandler]
+ * @returns {Promise<*>}
+ */
 async function withRetry(fn, maxAttempts, errorHandler) {
   let lastError;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -7,12 +14,12 @@ async function withRetry(fn, maxAttempts, errorHandler) {
       return await fn(attempt);
     } catch (error) {
       lastError = error;
-      if (error.nonRetryable) throw error;
+      if (error && error.noRetry) throw error;
       if (errorHandler) errorHandler(attempt, error);
       if (attempt < maxAttempts - 1) {
         const delay = Math.min(
           Math.pow(2, attempt) * constants.RETRY_INTERVAL,
-          30000,
+          60000,
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
