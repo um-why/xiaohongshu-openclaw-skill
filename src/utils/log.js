@@ -24,7 +24,7 @@ async function taskWrite(filename, content) {
     utils.printError("日志内容必须是非空字符串");
     return;
   }
-  let safeFilename = filename
+  let safeFilename = `${process.pid}_${filename}`
     .replace(/[\\/:*?"<>|]/g, "_")
     .replace(/\.\.+/g, "_")
     .replace(/^\.+|\.+$/g, "");
