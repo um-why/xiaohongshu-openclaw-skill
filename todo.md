@@ -189,10 +189,11 @@
 - [ ] **P2-14 无「空结果 vs 失败」评测集**  
   - 方向：固定 fixture：AUTH / INVALID_* / empty / success 最小样例，供 Agent eval 与回归
 
-- [ ] **P2-15 微信客服号写在 Skill 正文**  
+- [x] **P2-15 微信客服号写在 Skill 正文**  
   - 位置：`SKILL.md` / `readme.md`  
   - 问题：Agent 可能在不合适场景复读手机号；号码变更要发版  
-  - 方向：支持信息只放 readme / troubleshooting；SKILL 只链官网
+  - 方向：去掉全部微信手机号；开通与支持只链官网 / GitHub Issues  
+  - 备注：2026-11-04 已清理；本次不升版本号
 
 ---
 

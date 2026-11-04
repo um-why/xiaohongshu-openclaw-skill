@@ -21,7 +21,7 @@ metadata:
     bins: ["node"]
     env: ["GUAIKEI_API_TOKEN"]
   env_desc:
-    GUAIKEI_API_TOKEN: "小红书数据 API 访问令牌。未配置时无法调用接口；可通过 https://www.guaikei.com 开通，或联系开发者（微信 13395823479，备注：小红书技能）。"
+    GUAIKEI_API_TOKEN: "小红书数据 API 访问令牌。未配置时无法调用接口；可通过 https://www.guaikei.com 开通。"
   keywords:
     - "小红书"
     - "小红薯"
@@ -348,7 +348,7 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
 
 调用会把关键词或链接发到[小红书洞察与竞品分析助手](https://www.guaikei.com)。不上传本机文件。结果只供个人或团队内部分析。计费与单次上限以官网为准；**包月**超限为 `PLAN_LIMIT`，不是网络故障。
 
-🎧 开通[小红书洞察与竞品分析助手 TOKEN](https://www.guaikei.com)，或微信 `13395823479`（备注：小红书技能）。问题见 [GitHub Issues](https://github.com/um-why/xiaohongshu-openclaw-skill/issues)。
+🎧 开通[小红书洞察与竞品分析助手 TOKEN](https://www.guaikei.com)。问题见 [GitHub Issues](https://github.com/um-why/xiaohongshu-openclaw-skill/issues)。
 
 参数细则见 [references/options.md](references/options.md)，排查见 [references/troubleshooting.md](references/troubleshooting.md)，更新记录见 [references/changelog.md](references/changelog.md)。
 
