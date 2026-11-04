@@ -1,6 +1,6 @@
 {
   "name": "xiaohongshu-tool",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "小红书公开数据只读技能。关键词搜笔记、笔记详情、评论舆情、博主作品与粉丝数据，输出 JSON。用于选题、竞品、KOL 筛选。",
   "keywords": [
     "小红书",

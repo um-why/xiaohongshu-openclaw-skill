@@ -2,7 +2,7 @@
 
 > 把「刷一小时小红书、再手工记点赞」换成「说一句话，拿回结构化数据」。关键词、笔记链接、博主主页都能查。AI 接着就能做选题、盯竞品、筛 KOL、读评论区。
 
-**只读公开数据 · 不登录你的小红书账号 · 单次最多 1 万条 · 装进 Agent 就能用人话说**
+**只读公开数据 · 不登录你的小红书账号 · 按量最多 1 万条；包月搜索/作品/评论分别最多 40/30/20 · 装进 Agent 就能用人话说**
 
 [开通小红书数据 TOKEN](https://www.guaikei.com) · 也可以加微信 `13395823479`（备注：小红书技能）
 
@@ -86,7 +86,7 @@ node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --
     "limit": 20
   },
   "metadata": {
-    "skill_version": "1.2.0",
+    "skill_version": "1.2.1",
     "runtime_version": "22.x",
     "execution_time": 34210
   },
@@ -142,24 +142,30 @@ node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --
 **我在国内，要代理吗？**
 不用。
 
+**单次能拉多少条？**
+技能侧硬上限 10000 条/次（按量 Token）。**包月 Token** 搜索最多 40、作品最多 30、评论最多 20，超限返回 `PLAN_LIMIT`（退出码 1），不要当网络错误重试。具体计费口径以官网说明为准。
+
+**报错 `PLAN_LIMIT` / 提示包月受限？**
+降低 `--limit` 后须用户同意再跑，或到[官网](https://www.guaikei.com)升级按量；**禁止同参重试**。
+
 ---
 
 ## 边界
 
 - 公开笔记、评论、博主信息。私密、草稿、仅粉丝可见、创作者后台、商业化后台都不支持
 - 不做写操作
-- 单次最多 1 万条。用户没说要多少时，搜索默认 20，评论默认 10，博主默认只看资料
+- 按量最多 1 万条；包月更低（搜索 40 / 作品 30 / 评论 20）。用户没说要多少时，搜索默认 20，评论默认 10，博主默认只看资料
 
 ---
 
 ## 再跑几条
 
 ```bash
-# 一天内最新
-node src/xiaohongshu/search-cli.js --keyword "多巴胺穿搭" --sort 1 --time 1 --limit 50
+# 一天内最新（包月勿超 40）
+node src/xiaohongshu/search-cli.js --keyword "多巴胺穿搭" --sort 1 --time 1 --limit 40
 
-# 近 30 天评论
-node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30 --limit 200
+# 近 30 天评论（包月勿超 20）
+node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30 --limit 20
 
 # 博主近 30 条作品
 node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 30

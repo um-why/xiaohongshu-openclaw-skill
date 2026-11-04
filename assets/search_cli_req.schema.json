@@ -31,7 +31,7 @@
         },
         "limit": {
             "type": "number",
-            "description": "返回数量",
+            "description": "返回数量。技能硬上限 10000（按量）；包月 Token 实际最多 40，超限返回 PLAN_LIMIT",
             "minimum": 1,
             "maximum": 10000,
             "default": 20

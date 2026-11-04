@@ -40,7 +40,7 @@ const SCHEMA = {
       type: "number",
       default: 10,
       transform: (v) => Number(v),
-      desc: "评论数量, 1-10000",
+      desc: "评论数量, 1-10000；包月 Token 实际最多 20",
     },
   },
   positionalKey: "url",
@@ -55,13 +55,14 @@ const URL_MESSAGE =
 function printHelp() {
   process.stderr.write(
     buildHelp(SCHEMA, "node src/xiaohongshu/comment-cli.js <笔记链接> [选项]", [
-      'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --limit 100',
+      'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --limit 20',
       'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30',
       'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at "2026-10-01 12:00:00"',
     ]) +
       "\n\n注意:\n" +
       "  - 这是笔记链接，不是博主主页链接\n" +
       "  - --expired_at 不传时，按北京时间近 6 年换算成一个时间点，创建和查询共用\n" +
+      "  - 数量 1-10000；包月 Token 实际最多 20，超限返回 PLAN_LIMIT\n" +
       "  - 天数和数量若不合法，命令会直接失败，不会改成默认值后继续请求\n",
   );
 }

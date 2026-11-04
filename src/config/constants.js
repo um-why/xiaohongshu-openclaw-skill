@@ -1,4 +1,4 @@
-let version = "1.2.0";
+let version = "1.2.1";
 try {
   const pkg = require("../../package.json");
   if (pkg && typeof pkg.version === "string" && pkg.version) {

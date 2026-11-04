@@ -28,8 +28,10 @@ node src/xiaohongshu/search-cli.js 夏季穿搭 [选项]
 | `--type` `-t` | 内容类型 | `0` 全部（默认），`1` 视频，`2` 图文 |
 | `--sort` `-s` | 排序 | `0` 综合（默认），`1` 最新，`2` 最多点赞，`3` 最多评论，`4` 最多收藏 |
 | `--time` `-i` | 发布时间 | `0` 全部（默认），`1` 一天内，`2` 一周内，`3` 半年内 |
-| `--limit` `-l` | 返回数量 | `1–10000`，默认 `20` |
+| `--limit` `-l` | 返回数量 | `1–10000`（**包月 Token 实际最多 40**），默认 `20` |
 | `--help` `-h` | 帮助 | 无 |
+
+> **套餐双上限**：技能硬上限 10000（按量）。包月 Token 超限返回 `PLAN_LIMIT`：搜索 ≤40，作品 ≤30，评论 ≤20。详情无此条数限制。
 
 非法枚举或越界数量会失败，不会改成默认值。`--time 2` 是一周内，不是 2 天。`--sort 2` 是最多点赞，不是最新。
 
@@ -74,12 +76,12 @@ node src/xiaohongshu/post-cli.js 66a8aaaaaaaaaaaaaaaaaaaa
 | 参数 | 说明 | 取值 / 默认 |
 | --- | --- | --- |
 | `--url` `-u` | 博主主页或 `user_id`，必填 | 见下方，接口长度为 string(255) |
-| `--limit` `-l` | 笔记数量 | `0–10000`，默认 `0` |
+| `--limit` `-l` | 笔记数量 | `0–10000`（**包月最多 30**；0 = 只要博主互动数据），默认 `0` |
 | `--help` `-h` | 帮助 | 无 |
 
 支持 `https://www.xiaohongshu.com/user/profile/{user_id}`、第 3 节里的四类短链，以及 24 或 29 位十六进制 `user_id`。作品 id 只有 24 位，29 位 id 不能用于详情或评论。
 
-`limit` 为 0：只要博主信息和互动数据。大于 0：取笔记列表。不传 `--limit` 就是 0，不会返回作品。
+`limit` 为 0：只要博主信息和互动数据。大于 0：取笔记列表。不传 `--limit` 就是 0，不会返回作品。包月勿超 30。
 
 `results` 是对象：
 
@@ -91,7 +93,7 @@ node src/xiaohongshu/post-cli.js 66a8aaaaaaaaaaaaaaaaaaaa
 ## 5. 笔记评论
 
 ```bash
-node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 100
+node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy" --limit 20
 node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30
 node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at "2026-10-01 12:00:00"
 ```
@@ -100,7 +102,7 @@ node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/x
 | --- | --- | --- |
 | `--url` `-u` | 笔记链接或笔记 id，必填 | 见下方。含 `explore`、`discovery/item`、短链 |
 | `--expired_at` `-e` | 评论时间过滤 | 正整数天数，或 `YYYY-MM-DD HH:mm:ss`。不传则按北京时间近 6 年换算成一个时间点，创建和查询共用。`--expire` 与它相同 |
-| `--limit` `-l` | 评论数量 | `1–10000`，默认 `10` |
+| `--limit` `-l` | 评论数量 | `1–10000`（**包月最多 20**），默认 `10` |
 | `--help` `-h` | 帮助 | 无 |
 
 支持 `https://www.xiaohongshu.com/explore/{id}`、`https://www.xiaohongshu.com/discovery/item/{id}`、四类短链，以及 24 位笔记 id。

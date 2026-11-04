@@ -20,7 +20,7 @@
         },
         "error_code": {
             "type": "string",
-            "description": "OK、NO_MATCH、INVALID_KEYWORD、INVALID_URL、INVALID_ARGS、AUTH_REQUIRED、AUTH_ERROR、TIMEOUT、NETWORK_ERROR、HTTP_5xx、HTTP_429、API_ERROR，或接口 errcode 的十进制字符串"
+            "description": "OK、NO_MATCH、INVALID_KEYWORD、INVALID_URL、INVALID_ARGS、AUTH_REQUIRED、AUTH_ERROR、PLAN_LIMIT、TIMEOUT、NETWORK_ERROR、HTTP_5xx、HTTP_429、API_ERROR，或接口 errcode 的十进制字符串"
         },
         "message": {
             "type": "string",
@@ -74,7 +74,7 @@
                 },
                 "limit": {
                     "type": "number",
-                    "description": "搜索、评论为 1-10000；作品为 0-10000。参数尚未通过校验时可能缺此字段，或仍是用户传入的原值"
+                    "description": "搜索、评论为 1-10000；作品为 0-10000。包月 Token 实际更低（搜索≤40、作品≤30、评论≤20），超限为 PLAN_LIMIT。参数尚未通过校验时可能缺此字段，或仍是用户传入的原值"
                 }
             }
         },

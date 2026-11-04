@@ -52,7 +52,7 @@ const SCHEMA = {
       type: "number",
       default: 20,
       transform: (v) => Number(v),
-      desc: "搜索数量, 1-10000",
+      desc: "搜索数量, 1-10000；包月 Token 实际最多 40",
     },
   },
   positionalKey: "keyword",
@@ -70,6 +70,7 @@ function printHelp() {
       "\n\n注意:\n" +
       "  - 关键词 1-50 个字符，不能是链接，不含 < > \" '\n" +
       "  - 类型、排序、时间和数量若不在允许范围内，命令会直接失败，不会改成默认值后继续搜索\n" +
+      "  - 数量 1-10000；包月 Token 实际最多 40，超限返回 PLAN_LIMIT\n" +
       "  - 关键词以 - 开头时写成 --keyword=-AI，或在 -- 后面写位置参数\n",
   );
 }
