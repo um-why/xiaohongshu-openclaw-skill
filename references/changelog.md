@@ -1,5 +1,16 @@
 # 技能更新日志
 
+## v1.2.2
+
+- 链接归一剥首尾中文引号/书名号等，避免 `「」『』` 粘在 explore/短链后误判无效。
+- `finishSuccess` 先落盘再 drain stdout，再 stderr 提示后 `exit(0)`。
+- 错误码改为 errmsg 优先：`PLAN_LIMIT` / `INSUFFICIENT_BALANCE` / `RATE_LIMITED` / `DAILY_LIMIT`。
+- 修复详情接口 `errcode 14`（余额不足）被误标为 `PLAN_LIMIT` 的问题。
+- 映射评论余额 `17`、短时限流 `2`、日消费上限 `18`；频控不再被创建阶段无意义重试。
+- 分层披露：`SKILL.md` 压缩为执行卡（前置 / 场景 / 识别 / 一行例 / 路由 / 输出与错误摘要 / 禁止 / references 入口）。
+- NL 映射、输出契约、错误全表、追问话术、FAQ 下沉到 `references/`（`routing.md` / `contract.md` / `errors.md` / `ask.md` / `faq.md`）；参数详表仍以 `options.md` 为准。
+- `--url` 支持整段 App 分享文案抽链；保留 `xsec_token` query；剥「复制打开小红书」等尾部中文。
+
 ## v1.2.1
 
 - 明确套餐双上限：技能硬上限仍为 10000（按量）；包月 Token 搜索最多 40、作品最多 30、评论最多 20。

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const search = require("../api/search");
-const log = require("../utils/log");
 const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/keyword");
@@ -9,7 +8,8 @@ const { parseArgs, buildHelp } = require("../utils/args");
 const {
   emitError,
   emitEmpty,
-  printSuccessEnvelope,
+  buildSuccessEnvelope,
+  finishSuccess,
   emitUncaught,
 } = require("../utils/output");
 
@@ -98,9 +98,6 @@ async function main() {
       startTime,
     );
     return;
-  }
-  if (parsed._warnings) {
-    for (const w of parsed._warnings) utils.printWarn(w);
   }
   if (parsed._help) {
     printHelp();
@@ -211,20 +208,16 @@ async function main() {
     return;
   }
 
-  const { payload: finalOutput, text } = printSuccessEnvelope(
+  const finalOutput = buildSuccessEnvelope(
     "搜索任务完成",
     startTime,
     searchRequest,
     searchTask,
   );
-  utils.printSuccess(
-    `搜索任务完成, 共返回 ${finalOutput.results.length} 条结果`,
-  );
-
-  await log.taskWrite(
-    `${startTime}_${keyword}_${type}_${sort}_${time}_${limit}_search.json`,
-    text,
-  );
+  await finishSuccess(finalOutput, {
+    logFilename: `${startTime}_${keyword}_${type}_${sort}_${time}_${limit}_search.json`,
+    stderrMessage: `搜索任务完成, 共返回 ${finalOutput.results.length} 条结果`,
+  });
 }
 
 main().catch((error) => {

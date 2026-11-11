@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const detail = require("../api/detail");
-const log = require("../utils/log");
 const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/url");
@@ -9,7 +8,8 @@ const { parseArgs, buildHelp } = require("../utils/args");
 const {
   emitError,
   emitEmpty,
-  printSuccessEnvelope,
+  buildSuccessEnvelope,
+  finishSuccess,
   emitUncaught,
 } = require("../utils/output");
 
@@ -40,6 +40,7 @@ function printHelp() {
     ]) +
       "\n\n注意:\n" +
       "  - 这是笔记链接，不是博主主页链接\n" +
+      "  - 支持 explore / discovery/item / xhslink 短链 / 24 位笔记 id；可整段粘贴 App 分享文案，自动抽链\n" +
       "  - 详情不返回评论；评论请使用 comment-cli.js\n",
   );
 }
@@ -67,9 +68,6 @@ async function main() {
       startTime,
     );
     return;
-  }
-  if (parsed._warnings) {
-    for (const w of parsed._warnings) utils.printWarn(w);
   }
   if (parsed._help) {
     printHelp();
@@ -127,18 +125,16 @@ async function main() {
     return;
   }
 
-  const { text } = printSuccessEnvelope(
+  const finalOutput = buildSuccessEnvelope(
     "详情任务完成",
     startTime,
     detailRequest,
     detailTask,
   );
-  utils.printSuccess("详情任务完成, 已返回结果");
-
-  await log.taskWrite(
-    `${startTime}_${validator.url2Name(url)}_detail.json`,
-    text,
-  );
+  await finishSuccess(finalOutput, {
+    logFilename: `${startTime}_${validator.url2Name(url)}_detail.json`,
+    stderrMessage: "详情任务完成, 已返回结果",
+  });
 }
 
 main().catch((error) => {

@@ -1,6 +1,8 @@
 # 常见问题排查
 
-本文件对应 `SKILL.md` 的退出码。失败时读 stdout 里那一份 JSON 的 `error_code` 和 `message`。stderr 只有运行日志。
+> **何时读**：逐步排障问答。Agent 日常错误应对优先看 `SKILL.md` §7 或 [errors.md](errors.md)；环境/落盘见 [faq.md](faq.md)。
+
+本文件补充常见现象说明。失败时读 stdout 里那一份 JSON 的 `error_code` 和 `message`。stderr 只有运行日志。
 
 成功结果写在系统临时目录的 `xiaohongshu-guaikei/logs/当天日期/`。Windows 通常是 `%TEMP%`，macOS / Linux 是 `os.tmpdir()`。不在技能目录里，系统清理临时文件后会消失。`XHS_GUAIKEI_DISABLE_LOG=1` 可以关闭落盘。
 

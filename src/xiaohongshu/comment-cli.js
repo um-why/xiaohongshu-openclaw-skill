@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const comment = require("../api/comment");
-const log = require("../utils/log");
 const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/url");
@@ -10,7 +9,8 @@ const { parseArgs, buildHelp } = require("../utils/args");
 const {
   emitError,
   emitEmpty,
-  printSuccessEnvelope,
+  buildSuccessEnvelope,
+  finishSuccess,
   emitUncaught,
 } = require("../utils/output");
 
@@ -61,6 +61,7 @@ function printHelp() {
     ]) +
       "\n\n注意:\n" +
       "  - 这是笔记链接，不是博主主页链接\n" +
+      "  - 支持 explore / discovery/item / xhslink 短链 / 24 位笔记 id；可整段粘贴 App 分享文案，自动抽链\n" +
       "  - --expired_at 不传时，按北京时间近 6 年换算成一个时间点，创建和查询共用\n" +
       "  - 数量 1-10000；包月 Token 实际最多 20，超限返回 PLAN_LIMIT\n" +
       "  - 天数和数量若不合法，命令会直接失败，不会改成默认值后继续请求\n",
@@ -96,9 +97,6 @@ async function main() {
       startTime,
     );
     return;
-  }
-  if (parsed._warnings) {
-    for (const w of parsed._warnings) utils.printWarn(w);
   }
   if (parsed._help) {
     printHelp();
@@ -177,20 +175,16 @@ async function main() {
     return;
   }
 
-  const { payload: finalOutput, text } = printSuccessEnvelope(
+  const finalOutput = buildSuccessEnvelope(
     "评论任务完成",
     startTime,
     request,
     commentTask,
   );
-  utils.printSuccess(
-    `评论任务完成, 共返回 ${finalOutput.results.length} 条结果`,
-  );
-
-  await log.taskWrite(
-    `${startTime}_${validator.url2Name(url)}_comment.json`,
-    text,
-  );
+  await finishSuccess(finalOutput, {
+    logFilename: `${startTime}_${validator.url2Name(url)}_comment.json`,
+    stderrMessage: `评论任务完成, 共返回 ${finalOutput.results.length} 条结果`,
+  });
 }
 
 main().catch((error) => {

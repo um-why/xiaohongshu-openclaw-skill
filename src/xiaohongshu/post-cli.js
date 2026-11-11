@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const post = require("../api/post");
-const log = require("../utils/log");
 const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/url");
@@ -10,7 +9,8 @@ const { parseArgs, buildHelp } = require("../utils/args");
 const {
   emitError,
   emitEmpty,
-  printSuccessEnvelope,
+  buildSuccessEnvelope,
+  finishSuccess,
   emitUncaught,
 } = require("../utils/output");
 
@@ -53,6 +53,7 @@ function printHelp() {
     ) +
       "\n\n注意:\n" +
       "  - 这是博主主页链接，不是笔记链接\n" +
+      "  - 支持 user/profile / xhslink 短链 / 24 或 29 位 user_id；可整段粘贴 App 分享文案，自动抽链\n" +
       "  - 不传 --limit 时默认为 0，只返回博主信息和互动数据\n" +
       "  - 数量 0-10000；包月 Token 实际最多 30（0 = 只要博主互动数据），超限返回 PLAN_LIMIT\n" +
       "  - 数量若不在 0-10000，命令会直接失败，不会改成默认值后继续请求\n",
@@ -89,9 +90,6 @@ async function main() {
       startTime,
     );
     return;
-  }
-  if (parsed._warnings) {
-    for (const w of parsed._warnings) utils.printWarn(w);
   }
   if (parsed._help) {
     printHelp();
@@ -163,7 +161,7 @@ async function main() {
     return;
   }
 
-  const { text } = printSuccessEnvelope(
+  const finalOutput = buildSuccessEnvelope(
     "博主笔记任务完成",
     startTime,
     postRequest,
@@ -171,14 +169,10 @@ async function main() {
   );
   const noteCount = Array.isArray(postTask.note) ? postTask.note.length : 0;
   const hasUser = Boolean(postTask.user && Object.keys(postTask.user).length);
-  utils.printSuccess(
-    `博主笔记任务完成, 笔记 ${noteCount} 条${hasUser ? ", 含博主信息" : ""}`,
-  );
-
-  await log.taskWrite(
-    `${startTime}_${validator.url2Name(url)}_post.json`,
-    text,
-  );
+  await finishSuccess(finalOutput, {
+    logFilename: `${startTime}_${validator.url2Name(url)}_post.json`,
+    stderrMessage: `博主笔记任务完成, 笔记 ${noteCount} 条${hasUser ? ", 含博主信息" : ""}`,
+  });
 }
 
 main().catch((error) => {
