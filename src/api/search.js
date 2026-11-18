@@ -3,6 +3,7 @@
  */
 const constants = require("../config/constants");
 const { requestApi, pollTaskResult } = require("../utils/request");
+const { pickCost } = require("../utils/cost");
 const { SkillError } = require("../utils/errors");
 
 /**
@@ -29,7 +30,7 @@ async function createSearchTask(token, keyword, type, sort, time, limit) {
 
 /**
  * 获取小红书笔记搜索任务结果。返回接口 data 数组，不追加文档以外的字段。
- * @returns {Promise<Array>}
+ * @returns {Promise<{ results: Array, cost?: number }>}
  */
 async function getSearchTask(token, keyword, type, sort, time, limit) {
   const response = await pollTaskResult(
@@ -38,10 +39,11 @@ async function getSearchTask(token, keyword, type, sort, time, limit) {
     token,
     "查询任务",
   );
+  const cost = pickCost(response);
   if (!Array.isArray(response.data)) {
     throw new SkillError("API_ERROR", "搜索结果格式错误: data 不是数组", true);
   }
-  return response.data;
+  return { results: response.data, cost };
 }
 
 module.exports = {

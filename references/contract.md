@@ -14,15 +14,17 @@ stdout 只有一份统一信封（成功 / 空结果 / 错误结构相同）：
   "timestamp": "2026/10/22 15:16:11",
   "request": { "command": "search", "keyword": "露营装备", "limit": 20 },
   "metadata": {
-    "skill_version": "1.2.2",
+    "skill_version": "1.2.3",
     "runtime_version": "22.x",
     "execution_time": 34210
   },
-  "results": []
+  "results": [],
+  "cost": 0.08
 }
 ```
 
 - `status=error` 或 `empty` 时 `results` 为 `null`。
+- 可选顶层 `cost`（number）：取数成功 / empty 时可能出现，为**花费估算**（包月固定 `1`，按次按条数×单价）；错误、上游未返回时省略。
 - 信封字段见 `assets/output_envelope.schema.json`。
 - 条目字段见 `assets/*_cli_resp.schema.json`。
 

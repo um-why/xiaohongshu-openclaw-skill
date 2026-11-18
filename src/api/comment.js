@@ -3,6 +3,7 @@
  */
 const constants = require("../config/constants");
 const { requestApi, pollTaskResult } = require("../utils/request");
+const { pickCost } = require("../utils/cost");
 const { SkillError } = require("../utils/errors");
 
 function commentBody(url, expiredAt, limit) {
@@ -33,7 +34,7 @@ async function createCommentTask(token, url, expiredAt, limit) {
 
 /**
  * 获取小红书评论任务结果。
- * @returns {Promise<Array>}
+ * @returns {Promise<{ results: Array, cost?: number }>}
  */
 async function getCommentTask(token, url, expiredAt, limit) {
   const response = await pollTaskResult(
@@ -42,11 +43,12 @@ async function getCommentTask(token, url, expiredAt, limit) {
     token,
     "查询任务",
   );
-  if (response.data == null) return [];
+  const cost = pickCost(response);
+  if (response.data == null) return { results: [], cost };
   if (!Array.isArray(response.data)) {
     throw new SkillError("API_ERROR", "评论结果格式错误: data 不是数组", true);
   }
-  return response.data;
+  return { results: response.data, cost };
 }
 
 module.exports = {

@@ -4,7 +4,7 @@ const search = require("../api/search");
 const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/keyword");
-const { parseArgs, buildHelp } = require("../utils/args");
+const { parseCliArgs, buildHelp } = require("../utils/args");
 const {
   emitError,
   emitEmpty,
@@ -54,6 +54,12 @@ const SCHEMA = {
       transform: (v) => Number(v),
       desc: "搜索数量, 1-10000；包月 Token 实际最多 40",
     },
+    "--save": {
+      key: "save",
+      type: "boolean",
+      default: false,
+      desc: "将完整结果写入本地日志（也可设 GUAIKEI_ENABLE_LOG=1）",
+    },
   },
   positionalKey: "keyword",
 };
@@ -66,12 +72,14 @@ function printHelp() {
     buildHelp(SCHEMA, "node src/xiaohongshu/search-cli.js <关键词> [选项]", [
       'node src/xiaohongshu/search-cli.js --keyword "露营装备"',
       "node src/xiaohongshu/search-cli.js --keyword 露营装备 --type 2 --sort 2 --time 2 --limit 20",
+,
+      `node src/xiaohongshu/search-cli.js --json-args "{\"keyword\":\"露营装备\",\"sort\":2,\"limit\":20}"`
     ]) +
-      "\n\n注意:\n" +
-      "  - 关键词 1-50 个字符，不能是链接，不含 < > \" '\n" +
-      "  - 类型、排序、时间和数量若不在允许范围内，命令会直接失败，不会改成默认值后继续搜索\n" +
-      "  - 数量 1-10000；包月 Token 实际最多 40，超限返回 PLAN_LIMIT\n" +
-      "  - 关键词以 - 开头时写成 --keyword=-AI，或在 -- 后面写位置参数\n",
+      "\r\n\r\n注意:\r\n" +
+      "  - 关键词 1-50 个字符，不能是链接，不含 < > \" '\r\n" +
+      "  - 类型、排序、时间和数量若不在允许范围内，命令会直接失败，不会改成默认值后继续搜索\r\n" +
+      "  - 数量 1-10000；包月 Token 实际最多 40，超限返回 PLAN_LIMIT\r\n" +
+      "  - 关键词以 - 开头时写成 --keyword=-AI，或在 -- 后面写位置参数\r\n",
   );
 }
 
@@ -86,7 +94,7 @@ async function main() {
 
   let parsed;
   try {
-    parsed = parseArgs(args, SCHEMA);
+    parsed = parseCliArgs(args, SCHEMA);
   } catch (error) {
     utils.printError(`参数解析错误: ${error.message}`);
     printHelp();
@@ -178,17 +186,18 @@ async function main() {
     limit,
   };
   let searchTask = null;
+  let cost;
   try {
     await search.createSearchTask(token, keyword, type, sort, time, limit);
     utils.printSuccess("搜索任务创建成功, 正在搜索中...");
-    searchTask = await search.getSearchTask(
+    ({ results: searchTask, cost } = await search.getSearchTask(
       token,
       keyword,
       type,
       sort,
       time,
       limit,
-    );
+    ));
   } catch (error) {
     utils.printError(`搜索失败: ${error.message}`);
     emitError(
@@ -204,7 +213,7 @@ async function main() {
 
   if (!Array.isArray(searchTask) || searchTask.length === 0) {
     utils.printInfo("没有找到匹配的笔记");
-    emitEmpty("没有找到匹配的笔记", startTime, searchRequest);
+    emitEmpty("没有找到匹配的笔记", startTime, searchRequest, cost);
     return;
   }
 
@@ -213,10 +222,12 @@ async function main() {
     startTime,
     searchRequest,
     searchTask,
+    cost,
   );
   await finishSuccess(finalOutput, {
     logFilename: `${startTime}_${keyword}_${type}_${sort}_${time}_${limit}_search.json`,
     stderrMessage: `搜索任务完成, 共返回 ${finalOutput.results.length} 条结果`,
+    save: parsed.save === true,
   });
 }
 

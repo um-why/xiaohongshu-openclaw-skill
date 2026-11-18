@@ -3,6 +3,7 @@
  */
 const constants = require("../config/constants");
 const { requestApi, pollTaskResult } = require("../utils/request");
+const { pickCost } = require("../utils/cost");
 const { SkillError } = require("../utils/errors");
 
 /**
@@ -46,7 +47,7 @@ function processDetail(data) {
 
 /**
  * 获取小红书笔记详情。返回接口 data 对象，不追加文档以外的字段。
- * @returns {Promise<object|null>}
+ * @returns {Promise<{ results: object|null, cost?: number }>}
  */
 async function getDetailTask(token, url) {
   const response = await pollTaskResult(
@@ -55,8 +56,9 @@ async function getDetailTask(token, url) {
     token,
     "查询任务",
   );
-  if (response.data == null) return null;
-  return processDetail(response.data);
+  const cost = pickCost(response);
+  if (response.data == null) return { results: null, cost };
+  return { results: processDetail(response.data), cost };
 }
 
 module.exports = {

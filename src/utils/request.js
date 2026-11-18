@@ -155,7 +155,9 @@ async function getJson(path, params, token) {
 }
 
 /**
- * 创建任务等一次性请求。网络和超时会重试；业务错误码 >= 10 不重试。
+ * 创建任务（withRetry）。是否重试看错误的 noRetry，不是「errcode < 10 一律重试」。
+ * 会重试：网络/超时/HTTP 429·5xx；未标 noRetry 的瞬时失败（如 Gate 查价失败的裸 1、插入失败的裸 3）。
+ * 不重试：RATE_LIMITED（创建频控多为后端 2）、PLAN_LIMIT、INSUFFICIENT_BALANCE、DAILY_LIMIT、AUTH_* 等（见 backendCodes）。
  * @param {string} method
  * @param {string} path
  * @param {object} params

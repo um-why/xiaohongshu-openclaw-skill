@@ -4,7 +4,7 @@ const detail = require("../api/detail");
 const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/url");
-const { parseArgs, buildHelp } = require("../utils/args");
+const { parseCliArgs, buildHelp } = require("../utils/args");
 const {
   emitError,
   emitEmpty,
@@ -22,6 +22,12 @@ const SCHEMA = {
       required: true,
       desc: "笔记链接或笔记 id",
     },
+    "--save": {
+      key: "save",
+      type: "boolean",
+      default: false,
+      desc: "将完整结果写入本地日志（也可设 GUAIKEI_ENABLE_LOG=1）",
+    },
   },
   positionalKey: "url",
 };
@@ -37,11 +43,13 @@ function printHelp() {
     buildHelp(SCHEMA, "node src/xiaohongshu/detail-cli.js <笔记链接>", [
       'node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx"',
       "node src/xiaohongshu/detail-cli.js --url 6a0123456789abcdef012345",
+,
+      `node src/xiaohongshu/detail-cli.js --json-args "{\"url\":\"https://www.xiaohongshu.com/explore/xxx\"}"`
     ]) +
-      "\n\n注意:\n" +
-      "  - 这是笔记链接，不是博主主页链接\n" +
-      "  - 支持 explore / discovery/item / xhslink 短链 / 24 位笔记 id；可整段粘贴 App 分享文案，自动抽链\n" +
-      "  - 详情不返回评论；评论请使用 comment-cli.js\n",
+      "\r\n\r\n注意:\r\n" +
+      "  - 这是笔记链接，不是博主主页链接\r\n" +
+      "  - 支持 explore / discovery/item / xhslink 短链 / 24 位笔记 id；可整段粘贴 App 分享文案，自动抽链\r\n" +
+      "  - 详情不返回评论；评论请使用 comment-cli.js\r\n",
   );
 }
 
@@ -56,7 +64,7 @@ async function main() {
 
   let parsed;
   try {
-    parsed = parseArgs(args, SCHEMA);
+    parsed = parseCliArgs(args, SCHEMA);
   } catch (error) {
     utils.printError(`参数解析失败: ${error.message}`);
     printHelp();
@@ -102,10 +110,11 @@ async function main() {
 
   const detailRequest = { command: "detail", url_raw: urlRaw, url };
   let detailTask = null;
+  let cost;
   try {
     await detail.createDetailTask(token, url);
     utils.printSuccess("详情任务创建成功, 正在获取中...");
-    detailTask = await detail.getDetailTask(token, url);
+    ({ results: detailTask, cost } = await detail.getDetailTask(token, url));
   } catch (error) {
     utils.printError(`获取详情失败: ${error.message}`);
     emitError(
@@ -121,7 +130,7 @@ async function main() {
 
   if (!detailTask) {
     utils.printInfo("没有找到匹配的笔记");
-    emitEmpty("没有找到匹配的笔记", startTime, detailRequest);
+    emitEmpty("没有找到匹配的笔记", startTime, detailRequest, cost);
     return;
   }
 
@@ -130,10 +139,12 @@ async function main() {
     startTime,
     detailRequest,
     detailTask,
+    cost,
   );
   await finishSuccess(finalOutput, {
     logFilename: `${startTime}_${validator.url2Name(url)}_detail.json`,
     stderrMessage: "详情任务完成, 已返回结果",
+    save: parsed.save === true,
   });
 }
 

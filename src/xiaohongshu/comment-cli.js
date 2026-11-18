@@ -5,7 +5,7 @@ const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/url");
 const { assertIntegerRange } = require("../validate/keyword");
-const { parseArgs, buildHelp } = require("../utils/args");
+const { parseCliArgs, buildHelp } = require("../utils/args");
 const {
   emitError,
   emitEmpty,
@@ -27,7 +27,7 @@ const SCHEMA = {
       alias: "-e",
       key: "expired_at",
       type: "string",
-      desc: "近 N 天, 或 YYYY-MM-DD HH:mm:ss 之后; 不传则按近 6 年换算",
+      desc: "1-2190 天(约6年), 或 YYYY-MM-DD HH:mm:ss(不早于2000、不能未来); 勿传Unix时间戳; 不传则按近6年换算",
     },
     "--expire": {
       key: "expired_at",
@@ -41,6 +41,12 @@ const SCHEMA = {
       default: 10,
       transform: (v) => Number(v),
       desc: "评论数量, 1-10000；包月 Token 实际最多 20",
+    },
+    "--save": {
+      key: "save",
+      type: "boolean",
+      default: false,
+      desc: "将完整结果写入本地日志（也可设 GUAIKEI_ENABLE_LOG=1）",
     },
   },
   positionalKey: "url",
@@ -58,13 +64,15 @@ function printHelp() {
       'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --limit 20',
       'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30',
       'node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at "2026-10-01 12:00:00"',
+,
+      `node src/xiaohongshu/comment-cli.js --json-args "{\"url\":\"https://www.xiaohongshu.com/explore/xxx\",\"limit\":20}"`
     ]) +
-      "\n\n注意:\n" +
-      "  - 这是笔记链接，不是博主主页链接\n" +
-      "  - 支持 explore / discovery/item / xhslink 短链 / 24 位笔记 id；可整段粘贴 App 分享文案，自动抽链\n" +
-      "  - --expired_at 不传时，按北京时间近 6 年换算成一个时间点，创建和查询共用\n" +
-      "  - 数量 1-10000；包月 Token 实际最多 20，超限返回 PLAN_LIMIT\n" +
-      "  - 天数和数量若不合法，命令会直接失败，不会改成默认值后继续请求\n",
+      "\r\n\r\n注意:\r\n" +
+      "  - 这是笔记链接，不是博主主页链接\r\n" +
+      "  - 支持 explore / discovery/item / xhslink 短链 / 24 位笔记 id；可整段粘贴 App 分享文案，自动抽链\r\n" +
+      "  - --expired_at 为 1-2190 天(约6年)或 YYYY-MM-DD HH:mm:ss(不早于2000、不能未来)；勿传 Unix 时间戳；不传则按北京时间近 6 年换算，创建和查询共用\r\n" +
+      "  - 数量 1-10000；包月 Token 实际最多 20，超限返回 PLAN_LIMIT\r\n" +
+      "  - 天数和数量若不合法，命令会直接失败，不会改成默认值后继续请求\r\n",
   );
 }
 
@@ -85,7 +93,7 @@ async function main() {
 
   let parsed;
   try {
-    parsed = parseArgs(args, SCHEMA);
+    parsed = parseCliArgs(args, SCHEMA);
   } catch (error) {
     utils.printError(`参数解析失败: ${error.message}`);
     printHelp();
@@ -152,10 +160,11 @@ async function main() {
 
   const request = commentRequest(urlRaw, url, expiredAt, limit);
   let commentTask = null;
+  let cost;
   try {
     await comment.createCommentTask(token, url, expiredAt, limit);
     utils.printSuccess("评论任务创建成功, 正在获取中...");
-    commentTask = await comment.getCommentTask(token, url, expiredAt, limit);
+    ({ results: commentTask, cost } = await comment.getCommentTask(token, url, expiredAt, limit));
   } catch (error) {
     utils.printError(`获取评论失败: ${error.message}`);
     emitError(
@@ -171,7 +180,7 @@ async function main() {
 
   if (!Array.isArray(commentTask) || commentTask.length === 0) {
     utils.printInfo("没有找到匹配的评论");
-    emitEmpty("没有找到匹配的评论", startTime, request);
+    emitEmpty("没有找到匹配的评论", startTime, request, cost);
     return;
   }
 
@@ -180,10 +189,12 @@ async function main() {
     startTime,
     request,
     commentTask,
+    cost,
   );
   await finishSuccess(finalOutput, {
     logFilename: `${startTime}_${validator.url2Name(url)}_comment.json`,
     stderrMessage: `评论任务完成, 共返回 ${finalOutput.results.length} 条结果`,
+    save: parsed.save === true,
   });
 }
 

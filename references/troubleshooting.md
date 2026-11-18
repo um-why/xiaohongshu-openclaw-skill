@@ -4,7 +4,7 @@
 
 本文件补充常见现象说明。失败时读 stdout 里那一份 JSON 的 `error_code` 和 `message`。stderr 只有运行日志。
 
-成功结果写在系统临时目录的 `xiaohongshu-guaikei/logs/当天日期/`。Windows 通常是 `%TEMP%`，macOS / Linux 是 `os.tmpdir()`。不在技能目录里，系统清理临时文件后会消失。`XHS_GUAIKEI_DISABLE_LOG=1` 可以关闭落盘。
+默认不落盘。需要留底时加 `--save` 或设 `GUAIKEI_ENABLE_LOG=1`，写入系统临时目录 `xiaohongshu-guaikei/logs/当天日期/`（Windows 多为 `%TEMP%`）。旧 `XHS_GUAIKEI_DISABLE_LOG` 已废弃。
 
 **Q1. `error_code` 为 `AUTH_REQUIRED` 或 `AUTH_ERROR`，退出码 3？**
 
@@ -61,7 +61,7 @@ stdout 只有最后这一份信封，用 `status` 区分成功、空结果和错
 
 **Q12. 评论时间过滤和预期不一致？**
 
-参数名是 `--expired_at`（`--expire` 相同）。正整数表示近 N 天，`YYYY-MM-DD HH:mm:ss` 表示该时间之后。不传时命令按北京时间近 6 年换算成一个时间点，并写进 `request.expired_at`。它不是分页。
+参数名是 `--expired_at`（`--expire` 相同）。`1-2190` 表示近 N 天（约 6 年），`YYYY-MM-DD HH:mm:ss` 表示该时间之后（不早于 2000-01-01、不能未来）。勿传 Unix 时间戳。不传时命令按北京时间近 6 年换算成一个时间点，并写进 `request.expired_at`。它不是分页。
 
 ## 支持信息
 

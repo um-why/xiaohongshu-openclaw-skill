@@ -3,6 +3,7 @@
  */
 const constants = require("../config/constants");
 const { requestApi, pollTaskResult } = require("../utils/request");
+const { pickCost } = require("../utils/cost");
 const { SkillError } = require("../utils/errors");
 
 /**
@@ -50,7 +51,7 @@ function processPost(data) {
 
 /**
  * 获取小红书博主笔记任务结果。
- * @returns {Promise<{note?: Array, user?: object}|null>}
+ * @returns {Promise<{ results: {note?: Array, user?: object}|null, cost?: number }>}
  */
 async function getPostTask(token, url, limit) {
   const response = await pollTaskResult(
@@ -59,8 +60,9 @@ async function getPostTask(token, url, limit) {
     token,
     "查询任务",
   );
-  if (response.data == null) return null;
-  return processPost(response.data);
+  const cost = pickCost(response);
+  if (response.data == null) return { results: null, cost };
+  return { results: processPost(response.data), cost };
 }
 
 module.exports = {

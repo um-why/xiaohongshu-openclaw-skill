@@ -1,3 +1,5 @@
+const { COMMENT_EXPIRED_AT_MAX_DAYS } = require("../config/constants");
+
 const NOTE_ID_RE = /^[0-9a-f]{24}$/i;
 const USER_ID_RE = /^(?:[0-9a-f]{24}|[0-9a-f]{29})$/i;
 
@@ -172,7 +174,8 @@ function defaultExpiredAt() {
 
 /**
  * 评论时间过滤。不传则返回 undefined，由命令换算近 6 年的时间点。
- * 传入时只接受正整数天数，或 YYYY-MM-DD HH:mm:ss。
+ * 传入时只接受 1–COMMENT_EXPIRED_AT_MAX_DAYS 天，或 YYYY-MM-DD HH:mm:ss
+ * （不早于 2000-01-01、不能是未来；勿传 Unix 时间戳）。
  * @param {string|number|undefined} value
  * @returns {number|string|undefined}
  */
@@ -183,7 +186,12 @@ function assertExpiredAt(value) {
     const days = Number(text);
     if (!Number.isInteger(days) || days < 1) {
       throw new Error(
-        `expired_at ${value} 无效, 天数须为大于 0 的整数, 或 YYYY-MM-DD HH:mm:ss`,
+        `expired_at ${value} 无效, 天数须为 1-${COMMENT_EXPIRED_AT_MAX_DAYS} 的整数, 或 YYYY-MM-DD HH:mm:ss`,
+      );
+    }
+    if (days > COMMENT_EXPIRED_AT_MAX_DAYS) {
+      throw new Error(
+        `expired_at ${value} 天数过大, 最多约6年(${COMMENT_EXPIRED_AT_MAX_DAYS}天), 勿传Unix时间戳`,
       );
     }
     return days;
@@ -191,7 +199,7 @@ function assertExpiredAt(value) {
   const matched = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(text);
   if (!matched) {
     throw new Error(
-      `expired_at ${value} 无效, 天数须为大于 0 的整数, 或 YYYY-MM-DD HH:mm:ss`,
+      `expired_at ${value} 无效, 天数须为 1-${COMMENT_EXPIRED_AT_MAX_DAYS} 的整数, 或 YYYY-MM-DD HH:mm:ss`,
     );
   }
   const year = Number(matched[1]);
@@ -211,6 +219,23 @@ function assertExpiredAt(value) {
     second > 59
   ) {
     throw new Error(`expired_at ${value} 不是有效的日期时间`);
+  }
+  if (year < 2000) {
+    throw new Error(`expired_at ${value} 不能早于2000-01-01`);
+  }
+  // 按北京时间墙钟比较「是否未来」，与 defaultExpiredAt 一致
+  const shiftedNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const expireProbe = Date.UTC(year, month - 1, day, hour, minute, second);
+  const nowProbe = Date.UTC(
+    shiftedNow.getUTCFullYear(),
+    shiftedNow.getUTCMonth(),
+    shiftedNow.getUTCDate(),
+    shiftedNow.getUTCHours(),
+    shiftedNow.getUTCMinutes(),
+    shiftedNow.getUTCSeconds(),
+  );
+  if (expireProbe > nowProbe) {
+    throw new Error(`expired_at ${value} 不能是未来时间`);
   }
   return text;
 }

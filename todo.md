@@ -1,7 +1,7 @@
 # 小红书 OpenClaw Skill — 问题清单与优化方向
 
 > 审查日期：2026-11-03  
-> 范围：本仓库 `xiaohongshu-openclaw-skill`（JS Skill v1.2.1）+ 依赖后端 `D:\Git\guaikei`（XHS REST / MCP / 任务队列）  
+> 范围：本仓库 `xiaohongshu-openclaw-skill`（JS Skill v1.2.3）+ 依赖后端 `D:\Git\guaikei`（XHS REST / MCP / 任务队列）  
 > 目标读者：产品 / 后端 / Skill 维护者；面向 Cursor、Codex、WorkBuddy、OpenClaw、Claude Code 等 Agent，以及 GLM / DeepSeek / Kimi / GPT / Claude / Gemini / Grok 等多模型宿主  
 > 用法：逐条处理后将 `[ ]` 改为 `[x]`，可在「备注」补充 PR / 提交。建议顺序：**P0 → P1 → P2 → P3**。
 
@@ -31,11 +31,8 @@
   - 方向：映射 14/16 → `PLAN_LIMIT`；SKILL/readme/options 写明双上限；示例压在套餐内  
   - 备注：2026-11-04 已按 A+B 落地（`backendCodes.js`；版本 1.2.1）。能力探测 API 仍属后续
 
-- [ ] **P0-1 成功日志默认落盘含敏感字段**  
-  - 位置：`src/utils/log.js`、`*-cli.js` 成功路径  
-  - 问题：默认把整份 stdout JSON 写到 `%TEMP%/xiaohongshu-guaikei/logs/...`，含 `xsec_token`、昵称、正文、评论等  
-  - 影响：共享机 / 多用户环境可被同机读取；临时目录清理不可控  
-  - 方向：默认脱敏（去掉 token 类字段）或默认关闭落盘；仅 `XHS_GUAIKEI_ENABLE_LOG=1` 时全量；日志权限收紧
+- [x] **P0-1 成功日志默认落盘含敏感字段**  
+  - 备注：已改为默认不落盘；`--save` 或 `GUAIKEI_ENABLE_LOG=1` 才写 TEMP；POSIX 权限收紧；脱敏另议
 
 - [ ] **P0-2 stderr 打印原始关键词 / URL**  
   - 位置：各 `*-cli.js`  
@@ -65,11 +62,12 @@
 
 ### P1 — High（Agent 易错 / 契约漂移 / 体验）
 
-- [ ] **P1-1 SKILL.md 过重且重复，挤占上下文**  
-  - 位置：`SKILL.md` ~350 行；口语映射、参数表、示例多处重复  
+- [x] **P1-1 SKILL.md 过重且重复，挤占上下文**  
+  - 位置：原 `SKILL.md` ~350 行；口语映射、参数表、示例多处重复  
   - 问题：Cursor create-skill 原则是「concise + progressive disclosure」；弱模型更易漏读后半段  
   - 影响：路由错命令、错传 `-t`/`-i`、默认 limit 搞反  
-  - 方向：主文件压到「触发 + 路由 + 4 条最小命令 + 错误处理」；细则只链 `references/`；schema 作权威
+  - 方向：主文件压到执行卡；细则只链 `references/`；schema 作权威  
+  - 备注：2026-11-10 对照 douyin 1.5.0 落地（执行卡 + routing/contract/errors/ask/faq）；保持版本 1.2.2
 
 - [ ] **P1-2 数字枚举对模型不友好（中美模型通病，弱模型更严重）**  
   - 位置：`--type` 0/1/2、`--sort` 0–4、`--time` 0–3；文档反复强调「2≠2天」  
@@ -105,11 +103,12 @@
   - 影响：契约回归靠人肉；Agent 依赖的信封字段易 silently 漂移  
   - 方向：最小：对 `buildEnvelope` + URL/keyword 纯函数单测；golden JSON fixture；CI 跑 Node 16/18/20/22
 
-- [ ] **P1-8 业务错误码仍是数字字符串（`"15"`/`"17"`…）**  
+- [x] **P1-8 业务错误码仍是数字字符串（`"15"`/`"17"`…）**  
   - 位置：后端 errcode；Skill 原样透出；`SKILL.md` §5  
   - 问题：Agent 无法稳定分支，只能读中文 `message`  
   - 影响：重试策略混乱（有的该停、有的该等）  
-  - 方向：Skill 层映射到稳定枚举：`QUOTA_EXCEEDED` / `BALANCE_LOW` / `TOO_MANY_PENDING` / `PATH_DISABLED`；保留 `upstream_code`。**`14`/`16`→`PLAN_LIMIT` 已在 P0-0 / 1.2.1 完成**
+  - 方向：Skill 层映射到稳定枚举；保留 `upstream_code` 仍可选。**`14`/`16`→`PLAN_LIMIT` 已在 P0-0 / 1.2.1；1.2.2 按 errmsg 补 `INSUFFICIENT_BALANCE` / `RATE_LIMITED` / `DAILY_LIMIT`，并修详情 14 误标**  
+  - 备注：2026-11-09 落地
 
 - [ ] **P1-9 产品 API 已在后端存在，Skill 未暴露**  
   - 位置：guaikei `/api/xiaohongshu/product-*` + MCP `xiaohongshu_product_*`  
@@ -149,9 +148,16 @@
   - 影响：无法按 Skill 版本做用量/兼容分析  
   - 方向：后端记录 `skill_name` + `skill_version`（可放 header）；Skill 带 `User-Agent: xiaohongshu-tool/1.2.0`
 
-- [ ] **P2-6 死代码 `_warnings`**  
+- [x] **P2-6 死代码 `_warnings`**  
   - 位置：四个 CLI 处理 `_warnings`，`args.js` 从不设置  
-  - 方向：实现或删除
+  - 方向：实现或删除  
+  - 备注：2026-11-10 已删除四 CLI 残留分支（本 Skill 对非法参数 fail-fast，不引入软告警通道）；不升版本
+
+- [x] **P2-16 分享文案整段粘贴 `--url` 失败**  
+  - 位置：`src/validate/url.js` `normalizeUrl` 遇空格/尾部中文判空  
+  - 影响：App「复制打开小红书」最高频输入 → `INVALID_URL`  
+  - 方向：对齐抖音包 `extractDouyinUrl`，任意位置抽链并保留 query  
+  - 备注：2026-11-10 已落地 `extractXiaohongshuUrl`；不升版本
 
 - [ ] **P2-7 日志目录日期用本地时区，信封时间用北京时间**  
   - 位置：`log.js` `localDateStr` vs `time.js`  
@@ -162,10 +168,8 @@
   - 位置：`output.js`  
   - 方向：约定非 0 或静默成功；Agent 宿主管道场景可测
 
-- [ ] **P2-9 create 路径对 errcode 2–9 可能无意义重试**  
-  - 位置：`request.js` `errcode >= 10` 才 `noRetry`；`2`=提交过频也会重试  
-  - 影响：加重限流  
-  - 方向：白名单可重试码；过频/余额类立即失败
+- [x] **P2-9 create 路径对 errcode 2–9 可能无意义重试**  
+  - 已消化：裸 `2`→`RATE_LIMITED`（`noRetry`）；`PLAN_LIMIT`/`BALANCE`/`DAILY` 等亦禁重试；其余 `<10` 仅瞬时插入失败等可重试。`requestApi` 注释已改为以 `noRetry` 为准（勿写「errcode>=10 才停」）
 
 - [ ] **P2-10 互动数字段为字符串 + 缺省省略 0**  
   - 位置：后端序列化；Skill 透传；文档已提示  
@@ -362,7 +366,8 @@ Agent 读 `retryable` + `next_action.type` 比解析中文 `message` 可靠一�
 |------|------|------|
 | 问题与方向文档（本文） | 已完成 | 2026-11-03 |
 | P0-0 包月双上限 / PLAN_LIMIT | 已完成 | 2026-11-04 · v1.2.1 |
-| Phase A | 未开始 | |
+| P1-1 SKILL 分层披露 | 已完成 | 2026-11-10 · 保持 v1.2.2 |
+| Phase A | 进行中 | 余项见开放清单 |
 | Phase B | 未开始 | 需 guaikei 协同 |
 | Phase C | 未开始 | |
 | Eval 基线 | 未开始 | |
@@ -373,9 +378,14 @@ Agent 读 `retryable` + `next_action.type` 比解析中文 `message` 可靠一�
 
 | 用途 | 路径 |
 |------|------|
-| Agent 主说明 | `SKILL.md` |
+| Agent 执行卡 | `SKILL.md` |
 | 人类 readme | `readme.md` |
 | 参数细则 | `references/options.md` |
+| 口语映射 | `references/routing.md` |
+| 输出契约 | `references/contract.md` |
+| 错误全表 | `references/errors.md` |
+| 追问话术 | `references/ask.md` |
+| 环境 FAQ | `references/faq.md` |
 | 排障 | `references/troubleshooting.md` |
 | Schema | `assets/*.schema.json` |
 | CLI | `src/xiaohongshu/*-cli.js` |

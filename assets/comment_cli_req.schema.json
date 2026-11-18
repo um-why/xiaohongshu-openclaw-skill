@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "title": "小红书笔记评论 - 命令行入参",
-    "description": "获取一篇笔记的评论。expired_at 不传时，命令按北京时间近 6 年换算成一个时间点，创建和查询共用。",
+    "description": "获取一篇笔记的评论。expired_at 不传时，命令按北京时间近 6 年换算成一个时间点，创建和查询共用。勿传 Unix 时间戳。",
     "required": ["url"],
     "properties": {
         "url": {
@@ -18,10 +18,10 @@
             "default": 10
         },
         "expired_at": {
-            "description": "近 N 天内的评论，或该时间之后的评论。数字表示天数；字符串格式为 YYYY-MM-DD HH:mm:ss。不传时命令按北京时间近 6 年换算成一个 YYYY-MM-DD 00:00:00，创建和查询共用。limit=10000 且 expired_at=1 时也只返回近 1 天",
+            "description": "近 N 天内的评论，或该时间之后的评论。数字为 1-2190 天(约6年)；字符串为 YYYY-MM-DD HH:mm:ss(不早于2000-01-01、不能未来)。勿传 Unix 时间戳。不传时命令按北京时间近 6 年换算。limit=10000 且 expired_at=1 时也只返回近 1 天",
             "oneOf": [
-                { "type": "number", "minimum": 1 },
-                { "type": "string" }
+                { "type": "number", "minimum": 1, "maximum": 2190 },
+                { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$" }
             ]
         }
     },

@@ -1,5 +1,14 @@
 # 技能更新日志
 
+## v1.2.3
+
+- Windows cmd / PowerShell 双壳例与「cmd 只用双引号」写入 `SKILL.md` / `faq.md`（含 Workbuddy 绝对路径例）。
+- CLI 支持 `--json-args`（与传统 flag 互斥；键名用 `keyword`/`url`/`sort` 等）；`parseCliArgs` 统一入口；SKILL/faq 补例。
+- 成功结果默认不落盘；`--save` 或 `GUAIKEI_ENABLE_LOG=1` 时写入临时目录。废弃 `XHS_GUAIKEI_DISABLE_LOG`。
+- `backendCodes`：在余额文案判断之后将裸 `errcode === 14` / `16` 稳定映射为 `PLAN_LIMIT`（详情 14=余额仍靠 errmsg 先命中；评论包月官方码为 16）。
+- 补全 `requestApi` 创建重试注释：以 `noRetry` 为准（频控等稳定业务码不重试）。
+- stdout 信封顶层可选 `cost`（透传取数接口花费估算；错误省略）。
+
 ## v1.2.2
 
 - 链接归一剥首尾中文引号/书名号等，避免 `「」『』` 粘在 explore/短链后误判无效。

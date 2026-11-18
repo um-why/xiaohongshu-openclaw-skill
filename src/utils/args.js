@@ -22,6 +22,148 @@ function readValueAfterFlag(args, index, flagName, def) {
 }
 
 /**
+ * 从 JSON 对象按 schema 填结果（与 flag 路径同一套 default / required / transform）
+ */
+function applySchemaFromObject(obj, schema) {
+  if (obj === null || typeof obj !== "object" || Array.isArray(obj)) {
+    throw new Error("--json-args 须为 JSON 对象");
+  }
+
+  const allowed = new Map();
+  for (const def of Object.values(schema.flags)) {
+    allowed.set(def.key, def);
+  }
+
+  for (const key of Object.keys(obj)) {
+    if (!allowed.has(key)) {
+      throw new Error("--json-args 含未知字段: " + key);
+    }
+  }
+
+  const result = {};
+  for (const [flag, def] of Object.entries(schema.flags)) {
+    const key = def.key;
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (def.default !== undefined) result[key] = def.default;
+      continue;
+    }
+    const value = obj[key];
+    if (def.type === "boolean") {
+      if (typeof value !== "boolean") {
+        throw new Error("参数 " + key + " 须为布尔值 true/false");
+      }
+      result[key] = value;
+      continue;
+    }
+    if (def.type === "number") {
+      let raw;
+      if (typeof value === "number") {
+        if (!Number.isFinite(value)) {
+          throw new Error("参数 " + key + " 须为有限数字");
+        }
+        raw = String(value);
+      } else if (typeof value === "string") {
+        raw = value;
+      } else {
+        throw new Error("参数 " + key + " 须为数字或数字字符串");
+      }
+      const transformed = def.transform ? def.transform(raw) : Number(raw);
+      if (typeof transformed !== "number" || !Number.isFinite(transformed)) {
+        throw new Error("参数 " + key + " 需要数字，收到: \"" + raw + "\"");
+      }
+      result[key] = transformed;
+      continue;
+    }
+    if (typeof value !== "string") {
+      throw new Error("参数 " + key + " 须为字符串");
+    }
+    result[key] = def.transform ? def.transform(value) : value;
+  }
+
+  for (const [flag, def] of Object.entries(schema.flags)) {
+    if (def.required && result[def.key] === undefined) {
+      throw new Error(
+        "缺少必填参数: " +
+          flag +
+          (def.alias ? " / " + def.alias : "") +
+          "；JSON 字段名用 \"" +
+          def.key +
+          "\"",
+      );
+    }
+  }
+
+  return result;
+}
+
+/**
+ * 解析 --json-args 模式；与传统 flag / 位置参数互斥。
+ * @param {string[]} args
+ * @returns {{ raw: string } | null}
+ */
+function extractJsonArgsPayload(args) {
+  let hasJsonArgs = false;
+  for (const arg of args) {
+    const name = arg.indexOf("=") > 0 ? arg.slice(0, arg.indexOf("=")) : arg;
+    if (name === "--json-args") {
+      hasJsonArgs = true;
+      break;
+    }
+  }
+  if (!hasJsonArgs) return null;
+
+  let raw;
+  let seen = false;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const eq = arg.indexOf("=");
+    const name = eq > 0 ? arg.slice(0, eq) : arg;
+    const inline = eq > 0 ? arg.slice(eq + 1) : undefined;
+
+    if (name !== "--json-args") {
+      throw new Error(
+        "--json-args 不可与其它参数混用；请把全部业务字段放进 JSON，或改用传统 flag",
+      );
+    }
+    if (seen) throw new Error("参数 --json-args 重复指定");
+    seen = true;
+    if (inline !== undefined) {
+      if (inline === "") throw new Error("参数 --json-args 缺少有效值");
+      raw = inline;
+    } else {
+      const next = args[i + 1];
+      if (next === undefined || next.startsWith("-")) {
+        throw new Error("参数 --json-args 缺少值");
+      }
+      raw = next;
+      i++;
+    }
+  }
+  return { raw };
+}
+
+/**
+ * CLI 统一入口：有 --json-args 走 JSON；否则走传统 parseArgs（语义不变）。
+ */
+function parseCliArgs(args, schema) {
+  const jsonMode = extractJsonArgsPayload(args);
+  if (!jsonMode) return parseArgs(args, schema);
+  let obj;
+  try {
+    obj = JSON.parse(jsonMode.raw);
+  } catch (e) {
+    throw new Error(
+      "--json-args JSON 无效: " +
+        e.message +
+        "。PowerShell 建议外层单引号: --json-args '{\"keyword\":\"AI\"}'",
+    );
+  }
+  return applySchemaFromObject(obj, schema);
+}
+
+
+
+/**
  * 通用 CLI 参数解析
  * @param {string[]} args - process.argv.slice(2)
  * @param {Object} schema - 选项定义
@@ -150,7 +292,7 @@ function parseArgs(args, schema) {
  * @returns {string} 帮助文本
  */
 function buildHelp(schema, usage, examples = []) {
-  const lines = [`用法: ${usage}\n`, "选项:"];
+  const lines = [`用法: ${usage}\r\n`, "选项:"];
   for (const [flag, def] of Object.entries(schema.flags)) {
     const alias = def.alias || "";
     const placeholder = def.type === "boolean" ? "" : `<${def.key}>`;
@@ -158,11 +300,14 @@ function buildHelp(schema, usage, examples = []) {
     lines.push(`  ${flag}\t${alias}\t${placeholder}\t${def.desc}${defHint}`);
   }
   lines.push("  --help\t-h\t\t显示帮助信息");
+  lines.push(
+    "  --json-args\t\t<json>\t一次性传入全部参数的 JSON 对象（与其它 flag 互斥；键名用 keyword/url/sort 等，不用 --keyword）",
+  );
   if (examples.length > 0) {
-    lines.push("\n示例:");
+    lines.push("\r\n示例:");
     examples.forEach((ex) => lines.push(`  ${ex}`));
   }
-  return lines.join("\n");
+  return lines.join("\r\n");
 }
 
-module.exports = { parseArgs, readValueAfterFlag, buildHelp };
+module.exports = { parseArgs, parseCliArgs, applySchemaFromObject, readValueAfterFlag, buildHelp };

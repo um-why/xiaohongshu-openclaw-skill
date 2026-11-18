@@ -5,7 +5,7 @@ const key = require("../utils/key");
 const utils = require("../utils/utils");
 const validator = require("../validate/url");
 const { assertIntegerRange } = require("../validate/keyword");
-const { parseArgs, buildHelp } = require("../utils/args");
+const { parseCliArgs, buildHelp } = require("../utils/args");
 const {
   emitError,
   emitEmpty,
@@ -31,6 +31,12 @@ const SCHEMA = {
       transform: (v) => Number(v),
       desc: "笔记数量, 0-10000；包月最多 30；0 表示只取博主信息和互动数据",
     },
+    "--save": {
+      key: "save",
+      type: "boolean",
+      default: false,
+      desc: "将完整结果写入本地日志（也可设 GUAIKEI_ENABLE_LOG=1）",
+    },
   },
   positionalKey: "url",
 };
@@ -49,6 +55,7 @@ function printHelp() {
       [
         'node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx"',
         'node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 20',
+        `node src/xiaohongshu/post-cli.js --json-args "{\"url\":\"https://www.xiaohongshu.com/user/profile/xxx\",\"limit\":20}"`,
       ],
     ) +
       "\n\n注意:\n" +
@@ -78,7 +85,7 @@ async function main() {
 
   let parsed;
   try {
-    parsed = parseArgs(args, SCHEMA);
+    parsed = parseCliArgs(args, SCHEMA);
   } catch (error) {
     utils.printError(`参数解析失败: ${error.message}`);
     printHelp();
@@ -138,10 +145,11 @@ async function main() {
 
   const postRequest = { command: "post", url_raw: urlRaw, url, limit };
   let postTask = null;
+  let cost;
   try {
     await post.createPostTask(token, url, limit);
     utils.printSuccess("博主笔记任务创建成功, 正在获取中...");
-    postTask = await post.getPostTask(token, url, limit);
+    ({ results: postTask, cost } = await post.getPostTask(token, url, limit));
   } catch (error) {
     utils.printError(`获取博主笔记失败: ${error.message}`);
     emitError(
@@ -157,7 +165,7 @@ async function main() {
 
   if (isEmptyPost(postTask)) {
     utils.printInfo("没有找到匹配的博主或笔记");
-    emitEmpty("没有找到匹配的博主或笔记", startTime, postRequest);
+    emitEmpty("没有找到匹配的博主或笔记", startTime, postRequest, cost);
     return;
   }
 
@@ -166,12 +174,14 @@ async function main() {
     startTime,
     postRequest,
     postTask,
+    cost,
   );
   const noteCount = Array.isArray(postTask.note) ? postTask.note.length : 0;
   const hasUser = Boolean(postTask.user && Object.keys(postTask.user).length);
   await finishSuccess(finalOutput, {
     logFilename: `${startTime}_${validator.url2Name(url)}_post.json`,
     stderrMessage: `博主笔记任务完成, 笔记 ${noteCount} 条${hasUser ? ", 含博主信息" : ""}`,
+    save: parsed.save === true,
   });
 }
 

@@ -105,7 +105,7 @@ node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/x
 | 参数 | 说明 | 取值 / 默认 |
 | --- | --- | --- |
 | `--url` `-u` | 笔记链接或笔记 id，必填 | 见下方。含 `explore`、`discovery/item`、短链 |
-| `--expired_at` `-e` | 评论时间过滤 | 正整数天数，或 `YYYY-MM-DD HH:mm:ss`。不传则按北京时间近 6 年换算成一个时间点，创建和查询共用。`--expire` 与它相同 |
+| `--expired_at` `-e` | 评论时间过滤 | `1-2190` 天（约 6 年），或 `YYYY-MM-DD HH:mm:ss`（不早于 2000-01-01、不能未来）。勿传 Unix 时间戳。不传则按北京时间近 6 年换算成一个时间点，创建和查询共用。`--expire` 与它相同 |
 | `--limit` `-l` | 评论数量 | `1–10000`（**包月最多 20**），默认 `10` |
 | `--help` `-h` | 帮助 | 无 |
 
