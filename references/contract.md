@@ -9,12 +9,12 @@ stdout 只有一份统一信封（成功 / 空结果 / 错误结构相同）：
 ```json
 {
   "status": "success | empty | error",
-  "error_code": "OK | NO_MATCH | INVALID_KEYWORD | INVALID_URL | INVALID_ARGS | AUTH_REQUIRED | AUTH_ERROR | PLAN_LIMIT | INSUFFICIENT_BALANCE | RATE_LIMITED | DAILY_LIMIT | TIMEOUT | NETWORK_ERROR | HTTP_5xx | ...",
+  "error_code": "OK | NO_MATCH | INVALID_KEYWORD | INVALID_URL | INVALID_ARGS | AUTH_REQUIRED | AUTH_ERROR | PLAN_LIMIT | INSUFFICIENT_BALANCE | RATE_LIMITED | DAILY_LIMIT | TIMEOUT | NETWORK_ERROR | API_ERROR | HTTP_404 | HTTP_410 | HTTP_5xx | HTTP_* | ...",
   "message": "给人读的说明",
   "timestamp": "2026/10/22 15:16:11",
   "request": { "command": "search", "keyword": "露营装备", "limit": 20 },
   "metadata": {
-    "skill_version": "1.2.3",
+    "skill_version": "1.2.4",
     "runtime_version": "22.x",
     "execution_time": 34210
   },
@@ -35,6 +35,20 @@ stdout 只有一份统一信封（成功 / 空结果 / 错误结构相同）：
 | 搜索 / 评论 | **数组** |
 | 详情 | **一条笔记对象**（不是数组，不含评论） |
 | 作品 | **对象**：`{ note: 笔记数组, user: 博主信息 }`；`user.ipLocation` 为驼峰 |
+
+## 上游异步任务（Create → `/info`）
+
+> CLI 入参/出参 schema **不含**任务 uuid：命令行仍只收 keyword/url 等；任务 id 由 Skill 内部从 Create 响应带到查询，**不出现在 stdout 信封**。
+
+异步命令对 guaikei REST：
+
+| 步骤 | 约定 |
+| --- | --- |
+| Create 成功出参 | 顶层 `id`：标准 36 字符 uuid；缺失或形态不符视为无 id |
+| 查询 `/info` 有 id | **只传** `id`（请求层仍可附加 `_` / `skill_name`），**不带** keyword/url 等业务字段 |
+| 查询无 id | 只传与 Create 相同的业务字段（兼容旧后端） |
+
+有 id 时不带业务字段，是为避免上游「uuid 未命中则回落业务字段查他单」；未命中时按缺参/业务错误处理，由既有轮询与错误码承接。
 
 ## 向用户汇报
 

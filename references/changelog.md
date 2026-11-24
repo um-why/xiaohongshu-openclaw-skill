@@ -1,5 +1,17 @@
 # 技能更新日志
 
+## v1.2.4
+
+- 精简 frontmatter：删除顶层/`metadata` 的 `category` 与 `metadata.keywords`；有价值词并入精简 `tags`（触发仍以顶层 `description` 为准）。
+- 再删无效字段：`openclaw.emoji`、`metadata.enabled` / `runtime` / `env_desc`（门禁仍靠 `openclaw.primaryEnv` + `requires`）。
+- 精简 `metadata.examples`：四命令各一条；参数改双引号；去掉 search/comment 变体与粉丝查询复读。
+- HTTP 429/5xx：可重试（429→`RATE_LIMITED` 且 `noRetry=false`；与业务裸 2 区分）；`classifyPollError` 不再把所有 `ApiError` 一刀切为 fail。
+- Create 成功读取出参 `id`（标准 36 字符 uuid）：有 `id` 时查询 `/info` **只传 `id`**（不带业务字段，避免 uuid 未命中时静默回落他单）；无 `id` 或形态不符时仍只按业务字段查。
+- `contract.md` 写入「上游异步任务」约定；明确 CLI schema / 信封不含任务 uuid。
+- 执行示例改为 `node "<SKILL_ROOT>/src/xiaohongshu/…"`；faq 去掉宿主写死路径，统一用 `<SKILL_ROOT>` 占位。
+- 布尔 flag（如 `--save`）：裸 flag 为 true；`--save=false`/`0` 为 false；非法赋值报错。
+- 业务码映射：`410`（TOKEN 停用 Gone）/`405`（未开通）/`77`（过期）→ `AUTH_ERROR`；未知数字码兜底 `API_ERROR`；传输层补 `HTTP_404`/`HTTP_410` 说明。
+
 ## v1.2.3
 
 - Windows cmd / PowerShell 双壳例与「cmd 只用双引号」写入 `SKILL.md` / `faq.md`（含 Workbuddy 绝对路径例）。

@@ -3,18 +3,15 @@
  */
 const constants = require("../config/constants");
 const { requestApi, pollTaskResult } = require("../utils/request");
-const { pickCost } = require("../utils/cost");
+const { pickCost, pickTaskId } = require("../utils/cost");
 const { SkillError } = require("../utils/errors");
 
 /**
  * 创建小红书博主笔记任务
- * @param {string} token
- * @param {string} url
- * @param {number} limit 0 表示只要博主信息
- * @returns {Promise<object>}
+ * @returns {Promise<string|undefined>} Create 成功时的任务 id（uuid）
  */
 async function createPostTask(token, url, limit) {
-  return await requestApi(
+  const response = await requestApi(
     "POST",
     "/api/xiaohongshu/post/url",
     { _: Date.now() },
@@ -23,6 +20,7 @@ async function createPostTask(token, url, limit) {
     constants.CREATE_MAX_ATTEMPTS,
     "创建任务",
   );
+  return pickTaskId(response);
 }
 
 /**
@@ -51,12 +49,14 @@ function processPost(data) {
 
 /**
  * 获取小红书博主笔记任务结果。
+ * @param {string} [taskId] Create 返回的任务 id；有则查询只传 id（不带业务字段）
  * @returns {Promise<{ results: {note?: Array, user?: object}|null, cost?: number }>}
  */
-async function getPostTask(token, url, limit) {
+async function getPostTask(token, url, limit, taskId) {
+  const params = taskId ? { id: taskId } : { url, limit };
   const response = await pollTaskResult(
     "/api/xiaohongshu/post/info",
-    { url, limit },
+    params,
     token,
     "查询任务",
   );

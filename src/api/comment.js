@@ -3,7 +3,7 @@
  */
 const constants = require("../config/constants");
 const { requestApi, pollTaskResult } = require("../utils/request");
-const { pickCost } = require("../utils/cost");
+const { pickCost, pickTaskId } = require("../utils/cost");
 const { SkillError } = require("../utils/errors");
 
 function commentBody(url, expiredAt, limit) {
@@ -14,14 +14,10 @@ function commentBody(url, expiredAt, limit) {
 
 /**
  * 创建小红书评论任务。expiredAt 未传时由命令先换成时间点再调用。
- * @param {string} token
- * @param {string} url
- * @param {number|string|undefined} expiredAt
- * @param {number} limit
- * @returns {Promise<object>}
+ * @returns {Promise<string|undefined>} Create 成功时的任务 id（uuid）
  */
 async function createCommentTask(token, url, expiredAt, limit) {
-  return await requestApi(
+  const response = await requestApi(
     "POST",
     "/api/xiaohongshu/comment/url",
     { _: Date.now() },
@@ -30,16 +26,21 @@ async function createCommentTask(token, url, expiredAt, limit) {
     constants.CREATE_MAX_ATTEMPTS,
     "创建任务",
   );
+  return pickTaskId(response);
 }
 
 /**
  * 获取小红书评论任务结果。
+ * @param {string} [taskId] Create 返回的任务 id；有则查询只传 id（不带业务字段）
  * @returns {Promise<{ results: Array, cost?: number }>}
  */
-async function getCommentTask(token, url, expiredAt, limit) {
+async function getCommentTask(token, url, expiredAt, limit, taskId) {
+  const params = taskId
+    ? { id: taskId }
+    : commentBody(url, expiredAt, limit);
   const response = await pollTaskResult(
     "/api/xiaohongshu/comment/info",
-    commentBody(url, expiredAt, limit),
+    params,
     token,
     "查询任务",
   );

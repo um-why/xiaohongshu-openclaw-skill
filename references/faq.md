@@ -57,21 +57,21 @@ node src/xiaohongshu/search-cli.js --json-args '{"keyword":"露营装备","sort"
 node src/xiaohongshu/detail-cli.js --json-args '{"url":"https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"}'
 ```
 
-**绝对路径（未 cd / 工作目录是别的仓库时）**
+**绝对路径（推荐；未 cd / cwd 不是技能根时必用）**
 
-把下面路径换成本机 Agent 已安装的技能根目录（含 `SKILL.md` 的那一层）。示例按常见 Workbuddy 安装布局书写：
+`<SKILL_ROOT>` = 含本技能 `SKILL.md` 的那一层真实目录（以当前会话安装位置为准）。勿套用其它宿主的示例路径，勿用 frontmatter `name` 冒充目录名。
 
 ```bat
 REM cmd
-node "C:\Users\Administrator\.workbuddy\skills\xiaohongshu-tool\src\xiaohongshu\search-cli.js" --keyword "露营装备" --sort 2 --limit 20
+node "<SKILL_ROOT>\src\xiaohongshu\search-cli.js" --keyword "露营装备" --sort 2 --limit 20
 ```
 
 ```powershell
 # PowerShell
-node "C:\Users\Administrator\.workbuddy\skills\xiaohongshu-tool\src\xiaohongshu\search-cli.js" --keyword "露营装备" --sort 2 --limit 20
+node "<SKILL_ROOT>/src/xiaohongshu/search-cli.js" --keyword "露营装备" --sort 2 --limit 20
 ```
 
-> 默认不落盘。需要留底时加 `--save` 或设 `GUAIKEI_ENABLE_LOG=1`，写入系统临时目录 `xiaohongshu-guaikei/logs/`（与 cwd 无关）。旧变量 `XHS_GUAIKEI_DISABLE_LOG` 已废弃。
+> 默认不落盘。需要留底时加 `--save`（或 `--save=true`）或设 `GUAIKEI_ENABLE_LOG=1`；`--save=false` / `0` 显式关闭 CLI 落盘（env 仍开时以 env 为准）；非法值报错。写入系统临时目录 `xiaohongshu-guaikei/logs/`（与 cwd 无关）。旧变量 `XHS_GUAIKEI_DISABLE_LOG` 已废弃。
 
 ## 合规
 
@@ -84,11 +84,11 @@ node "C:\Users\Administrator\.workbuddy\skills\xiaohongshu-tool\src\xiaohongshu\
 - **没结果**：`status=empty` 退出码 0，属正常。可建议放宽 `--type` / `--time` 或换词，经用户同意后再试。
 - **结果太多**：控制 `--limit`；超过约 1000 条时先告知用户数据量。
 - **调用失败**：先看退出码——3 = token；2 = 参数；1 = 关键词/链接/网络/套餐/服务端。完整码表见 [errors.md](errors.md)。
-- **`Cannot find module`**：先 `cd` 到本技能目录（含 `SKILL.md` 的那一层），再执行 `node src/xiaohongshu/...`；或用上一节绝对路径。
+- **`Cannot find module`**：用上一节 `node "<SKILL_ROOT>/src/xiaohongshu/…"`；或先 `cd` 到 `<SKILL_ROOT>` 再用相对路径。
 - **博主命令没有笔记**：不传 `--limit` 默认是 0，只有 `results.user`。要作品列表请显式 `--limit N`。
 - **计费与单次上限**以官网为准。技能硬上限 10000 条/次（按量）；**包月**搜索最多 40、作品最多 30、评论最多 20，超限为 `PLAN_LIMIT`，不是网络故障。取数成功或 empty 时，信封顶层可能带 `cost`（花费**估算**：包月为 `1`，按次为条数×单价）；错误响应无此字段。
 - **账号安全**：只读能力，不登录/不发布/不点赞/不评论，无封号风险。
-- **落盘**：默认不写文件。`--save` 或 `GUAIKEI_ENABLE_LOG=1` 时写入系统临时目录 `xiaohongshu-guaikei/logs/当天日期/`（Windows 多为 `%TEMP%`）。旧 `XHS_GUAIKEI_DISABLE_LOG` 已废弃。
+- **落盘**：默认不写文件。`--save`（=`true`/`1`）或 `GUAIKEI_ENABLE_LOG=1` 时写入系统临时目录 `xiaohongshu-guaikei/logs/当天日期/`（Windows 多为 `%TEMP%`）；`--save=false`/`0` 关闭 CLI 侧落盘。旧 `XHS_GUAIKEI_DISABLE_LOG` 已废弃。
 - **国内要代理吗**：不用。
 
 口语参数表：[options.md](options.md)。GitHub 默认展示见仓库根目录 [readme.md](../readme.md)。

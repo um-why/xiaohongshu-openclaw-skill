@@ -2,31 +2,21 @@
 name: xiaohongshu-tool
 description: "小红书公开数据只读技能：关键词搜笔记、爆款选题、笔记详情、评论舆情、博主作品、粉丝获赞与收藏，输出 JSON，不登录不发布。触发词：小红书、小红薯、xhs、rednote、笔记链接、博主主页、竞品监控、KOL筛选、评论分析。用户要查小红书笔记、评论、选题、竞品或舆情时使用；抖音、快手、B站、微博、公众号不要用本技能。"
 license: MIT
-version: 1.2.3
-category: 数据分析
+version: 1.2.4
 homepage: https://www.guaikei.com
 metadata:
   openclaw:
-    emoji: "📕"
     primaryEnv: GUAIKEI_API_TOKEN
     requires:
       bins:
         - node
       env:
         - GUAIKEI_API_TOKEN
-  enabled: true
   type: command
-  runtime: "nodejs@16.14.0+"
   requires:
     bins: ["node"]
     env: ["GUAIKEI_API_TOKEN"]
-  env_desc:
-    GUAIKEI_API_TOKEN: "小红书数据 API 访问令牌。未配置时无法调用接口；可通过 https://www.guaikei.com 开通。"
-  keywords:
-    - "小红书"
-    - "小红薯"
-    - "xhs"
-    - "rednote"
+  tags:
     - "小红书搜索"
     - "小红书笔记"
     - "小红书评论"
@@ -35,36 +25,9 @@ metadata:
     - "竞品分析"
     - "KOL筛选"
     - "评论舆情"
+    - "xhs"
+    - "rednote"
     - "xiaohongshu"
-  category:
-    - "Integrations"
-    - "Research"
-    - "Creative"
-    - "内容创作"
-    - "数据分析"
-    - "商业运营"
-  tags:
-    - "小红书"
-    - "小红书搜索"
-    - "小红书笔记"
-    - "小红书评论"
-    - "小红书博主"
-    - "小红书运营"
-    - "小红书数据分析"
-    - "爆款选题"
-    - "竞品分析"
-    - "KOL筛选"
-    - "评论舆情分析"
-    - "内容选题调研"
-    - "趋势洞察"
-    - "种草营销"
-    - "新媒体运营"
-    - "关键词搜索"
-    - "评论分析"
-    - "选题调研"
-    - "爆款挖掘"
-    - "小红书内容创作"
-    - "小红书营销"
   schemas:
     - name: "输出信封"
       file: "assets/output_envelope.schema.json"
@@ -85,13 +48,10 @@ metadata:
     - name: "作品出参"
       file: "assets/post_cli_resp.schema.json"
   examples:
-    - "帮我找最近一周小红书『露营装备』的高赞图文笔记 → node src/xiaohongshu/search-cli.js --keyword '露营装备' --type 2 --sort 2 --time 2 --limit 20"
-    - "这条小红书笔记评论区在吐槽什么 → node src/xiaohongshu/comment-cli.js --url 'https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy' --limit 20"
-    - "看这个小红书博主最近 30 条作品发什么 → node src/xiaohongshu/post-cli.js --url 'https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy' --limit 30"
-    - "分析这篇小红书爆款笔记为什么火 → node src/xiaohongshu/detail-cli.js --url 'https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy'"
-    - "监控『多巴胺穿搭』最新动态 → node src/xiaohongshu/search-cli.js --keyword '多巴胺穿搭' --sort 1 --time 1 --limit 40"
-    - "这个小红书博主多少粉丝 → node src/xiaohongshu/post-cli.js --url 'https://www.xiaohongshu.com/user/profile/xxx' --limit 0"
-    - "只要这篇笔记近 30 天的评论 → node src/xiaohongshu/comment-cli.js --url 'https://www.xiaohongshu.com/explore/xxx' --expired_at 30 --limit 20"
+    - "帮我找最近一周小红书『露营装备』的高赞图文笔记 → node \"<SKILL_ROOT>/src/xiaohongshu/search-cli.js\" --keyword \"露营装备\" --type 2 --sort 2 --time 2 --limit 20"
+    - "这条小红书笔记评论区在吐槽什么 → node \"<SKILL_ROOT>/src/xiaohongshu/comment-cli.js\" --url \"https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy\" --limit 20"
+    - "看这个小红书博主最近 30 条作品发什么 → node \"<SKILL_ROOT>/src/xiaohongshu/post-cli.js\" --url \"https://www.xiaohongshu.com/user/profile/xxx?xsec_token=yyy\" --limit 30"
+    - "分析这篇小红书爆款笔记为什么火 → node \"<SKILL_ROOT>/src/xiaohongshu/detail-cli.js\" --url \"https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy\""
 ---
 
 # 📕 小红书洞察与竞品分析助手
@@ -100,7 +60,7 @@ metadata:
 
 ## 1. ⚠️ 执行前置（每次必过）
 
-1. **先 `cd` 到本 SKILL.md 所在目录**，再执行 `node src/xiaohongshu/*.js`（或用绝对路径，见 [faq.md](references/faq.md)）。
+1. **用绝对路径执行**：`node "<SKILL_ROOT>/src/xiaohongshu/<命令>.js" …`。`<SKILL_ROOT>` = 含本 `SKILL.md` 的那一层真实目录（以当前会话为准；勿套用其它宿主示例路径，勿用 frontmatter `name` 冒充目录名）。已 `cd` 到技能根时可用相对路径 `node src/xiaohongshu/…`（见 [faq.md](references/faq.md)）。
 2. **确认 `GUAIKEI_API_TOKEN` 已配置**。未配置 → 不执行，走 `AUTH_REQUIRED`（见 §7 / [errors.md](references/errors.md)），禁止先跑「试试看」。
 3. **一次只跑一条命令，等进程自己结束**。查询最多约 20 次退避，只算等待大约 15 分钟。stderr「处理中」不是失败。**未退出前不要判定失败，不要并发/重复同一命令。**
 4. **必填参数不齐先追问**（话术见 [ask.md](references/ask.md)），禁止猜测关键词或链接。
@@ -128,12 +88,14 @@ metadata:
 
 ## 3. 🎯 识别卡（选命令，命中即停）
 
+执行：`node "<SKILL_ROOT>/src/xiaohongshu/<脚本>" …`（下表只写脚本名）。
+
 | 用户要什么 | 命令 | 最少要有 |
 | --- | --- | --- |
-| 搜笔记、爆款、选题 | `node src/xiaohongshu/search-cli.js` | `--keyword` |
-| 一篇笔记的正文 / 为什么火 | `node src/xiaohongshu/detail-cli.js` | 笔记链接或 24 位笔记 id |
-| 一篇笔记的评论 / 舆情 | `node src/xiaohongshu/comment-cli.js` | 笔记链接或 24 位笔记 id |
-| 博主作品、粉丝、获赞 | `node src/xiaohongshu/post-cli.js` | 主页链接或 24/29 位 `user_id` |
+| 搜笔记、爆款、选题 | `search-cli.js` | `--keyword` |
+| 一篇笔记的正文 / 为什么火 | `detail-cli.js` | 笔记链接或 24 位笔记 id |
+| 一篇笔记的评论 / 舆情 | `comment-cli.js` | 笔记链接或 24 位笔记 id |
+| 博主作品、粉丝、获赞 | `post-cli.js` | 主页链接或 24/29 位 `user_id` |
 
 - 正文和评论都要：先 `detail-cli`，再 `comment-cli`。
 - 24 位 id / 短链类型不明：先追问（[ask.md](references/ask.md)），禁止两个命令都试。
@@ -146,25 +108,25 @@ metadata:
 > **Windows**：cmd **只用双引号**；PowerShell 含空格也优先双引号。仍拆坏或弱模型 → `--json-args`。双壳例 → [faq.md](references/faq.md)。
 
 ```bash
-node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --time 2 --limit 20
-node src/xiaohongshu/search-cli.js --keyword "多巴胺穿搭" --sort 1 --time 1 --limit 40
-node src/xiaohongshu/detail-cli.js --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
-node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --limit 20
-node src/xiaohongshu/comment-cli.js --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30 --limit 20
-node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 30
-node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 0
+node "<SKILL_ROOT>/src/xiaohongshu/search-cli.js" --keyword "露营装备" --type 2 --sort 2 --time 2 --limit 20
+node "<SKILL_ROOT>/src/xiaohongshu/search-cli.js" --keyword "多巴胺穿搭" --sort 1 --time 1 --limit 40
+node "<SKILL_ROOT>/src/xiaohongshu/detail-cli.js" --url "https://www.xiaohongshu.com/explore/xxx?xsec_token=yyy"
+node "<SKILL_ROOT>/src/xiaohongshu/comment-cli.js" --url "https://www.xiaohongshu.com/explore/xxx" --limit 20
+node "<SKILL_ROOT>/src/xiaohongshu/comment-cli.js" --url "https://www.xiaohongshu.com/explore/xxx" --expired_at 30 --limit 20
+node "<SKILL_ROOT>/src/xiaohongshu/post-cli.js" --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 30
+node "<SKILL_ROOT>/src/xiaohongshu/post-cli.js" --url "https://www.xiaohongshu.com/user/profile/xxx" --limit 0
 ```
 
-**Windows 双壳（同一条搜索，先 cd 到技能目录）**：
+**Windows 双壳（同一条搜索；把 `<SKILL_ROOT>` 换成真实技能根）**：
 
 ```bat
 REM cmd —— 参数必须用双引号，不要用单引号
-node src\xiaohongshu\search-cli.js --keyword "露营装备" --type 2 --sort 2 --time 2 --limit 20
+node "<SKILL_ROOT>\src\xiaohongshu\search-cli.js" --keyword "露营装备" --type 2 --sort 2 --time 2 --limit 20
 ```
 
 ```powershell
 # PowerShell —— 含空格/中文同样用双引号
-node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --time 2 --limit 20
+node "<SKILL_ROOT>/src/xiaohongshu/search-cli.js" --keyword "露营装备" --type 2 --sort 2 --time 2 --limit 20
 ```
 
 **数量 / 套餐**：搜索默认 **20**；评论默认 **10**；博主不传 `--limit` 默认 **0**（只有博主信息）。不要擅自抓 10000。技能硬上限 10000（按量）。**包月**超限 → `PLAN_LIMIT`：搜索 ≤40，作品 ≤30，评论 ≤20；详情无此条数限制。
@@ -190,13 +152,13 @@ node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --
 - `results`：搜/评论 = 数组；详情 = 单对象；作品 = `{note,user}`。
 - 互动数是字符串；比较前先转数字。
 
-完整信封与形态 → [contract.md](references/contract.md)。Schema 在 `assets/`。
+完整信封与形态 → [contract.md](references/contract.md)（含上游 Create `id` → `/info` 只传 `id`；CLI schema 不含任务 uuid）。Schema 在 `assets/`。
 
 ## 7. 🚨 错误应对（摘要）
 
 | error_code | 退出码 | Agent |
 | --- | --- | --- |
-| `AUTH_*` | 3 | **禁止重试**；引导官网配 TOKEN |
+| `AUTH_*` | 3 | **禁止重试**；引导官网检查/开通/续期 TOKEN（含停用 410、未开通 405；勿当成接口下线） |
 | `PLAN_LIMIT` | 1 | **禁止同参重试**；降 limit 须用户同意（搜≤40 / 作品≤30 / 评论≤20） |
 | `INSUFFICIENT_BALANCE` / `DAILY_LIMIT` | 1 | **禁止同参重试**；充值或明日/调限额 |
 | `RATE_LIMITED` | 1 | **禁止立即重试** |
@@ -213,7 +175,7 @@ node src/xiaohongshu/search-cli.js --keyword "露营装备" --type 2 --sort 2 --
 - `AUTH_*` / `PLAN_LIMIT` / `INSUFFICIENT_BALANCE` / `RATE_LIMITED` / `DAILY_LIMIT` 后不得同参或立即重试。
 - 不得把 stderr 原文转述给用户；不得整份 JSON 贴回对话。
 - 不得做登录态/私密获取或任何写操作。
-- 不得在未 cd 到技能目录时执行 `node src/xiaohongshu/*.js`。
+- 相对路径 `node src/xiaohongshu/*.js` 仅在已处于 `<SKILL_ROOT>` 时可用；否则必须用 `node "<SKILL_ROOT>/src/xiaohongshu/….js"`。
 - 24 位 id / 短链类型不明时，不得两个命令都试。
 
 ## 9. 📚 何时读 references（入口总表）

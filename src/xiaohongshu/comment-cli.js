@@ -162,9 +162,20 @@ async function main() {
   let commentTask = null;
   let cost;
   try {
-    await comment.createCommentTask(token, url, expiredAt, limit);
+    const taskId = await comment.createCommentTask(
+      token,
+      url,
+      expiredAt,
+      limit,
+    );
     utils.printSuccess("评论任务创建成功, 正在获取中...");
-    ({ results: commentTask, cost } = await comment.getCommentTask(token, url, expiredAt, limit));
+    ({ results: commentTask, cost } = await comment.getCommentTask(
+      token,
+      url,
+      expiredAt,
+      limit,
+      taskId,
+    ));
   } catch (error) {
     utils.printError(`获取评论失败: ${error.message}`);
     emitError(

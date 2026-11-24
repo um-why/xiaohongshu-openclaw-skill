@@ -1,7 +1,7 @@
 # 小红书 OpenClaw Skill — 问题清单与优化方向
 
 > 审查日期：2026-11-03  
-> 范围：本仓库 `xiaohongshu-openclaw-skill`（JS Skill v1.2.3）+ 依赖后端 `D:\Git\guaikei`（XHS REST / MCP / 任务队列）  
+> 范围：本仓库 `xiaohongshu-openclaw-skill`（JS Skill v1.2.4）+ 依赖后端 `D:\Git\guaikei`（XHS REST / MCP / 任务队列）  
 > 目标读者：产品 / 后端 / Skill 维护者；面向 Cursor、Codex、WorkBuddy、OpenClaw、Claude Code 等 Agent，以及 GLM / DeepSeek / Kimi / GPT / Claude / Gemini / Grok 等多模型宿主  
 > 用法：逐条处理后将 `[ ]` 改为 `[x]`，可在「备注」补充 PR / 提交。建议顺序：**P0 → P1 → P2 → P3**。
 

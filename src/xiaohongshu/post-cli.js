@@ -147,9 +147,14 @@ async function main() {
   let postTask = null;
   let cost;
   try {
-    await post.createPostTask(token, url, limit);
+    const taskId = await post.createPostTask(token, url, limit);
     utils.printSuccess("博主笔记任务创建成功, 正在获取中...");
-    ({ results: postTask, cost } = await post.getPostTask(token, url, limit));
+    ({ results: postTask, cost } = await post.getPostTask(
+      token,
+      url,
+      limit,
+      taskId,
+    ));
   } catch (error) {
     utils.printError(`获取博主笔记失败: ${error.message}`);
     emitError(

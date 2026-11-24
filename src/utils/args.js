@@ -6,6 +6,25 @@ function isNumberToken(value) {
   return /^-?\d+(\.\d+)?$/.test(value);
 }
 
+/**
+ * 布尔 flag：无 `=` 赋值 → true；有赋值须为 true/false/1/0（大小写不敏感）；其它值报错。
+ * @param {string|undefined|null} raw
+ * @param {string} flagName
+ * @returns {boolean}
+ */
+function parseBooleanFlagValue(raw, flagName) {
+  if (raw === undefined || raw === null) return true;
+  const s = String(raw).trim().toLowerCase();
+  if (s === "") {
+    throw new Error(`参数 ${flagName} 缺少有效布尔值（可用 true/false）`);
+  }
+  if (s === "true" || s === "1") return true;
+  if (s === "false" || s === "0") return false;
+  throw new Error(
+    `参数 ${flagName} 须为 true/false（或 1/0），收到: "${raw}"；省略该 flag 表示关闭`,
+  );
+}
+
 function readValueAfterFlag(args, index, flagName, def) {
   const next = args[index + 1];
   if (next === undefined) throw new Error(`参数 ${flagName} 缺少值`);
@@ -229,7 +248,7 @@ function parseArgs(args, schema) {
       seen.add(def.key);
 
       if (def.type === "boolean") {
-        result[def.key] = inlineValue === null ? true : inlineValue !== "false";
+        result[def.key] = parseBooleanFlagValue(inlineValue, flag);
       } else {
         let rawValue;
         if (inlineValue !== null) {
@@ -310,4 +329,11 @@ function buildHelp(schema, usage, examples = []) {
   return lines.join("\r\n");
 }
 
-module.exports = { parseArgs, parseCliArgs, applySchemaFromObject, readValueAfterFlag, buildHelp };
+module.exports = {
+  parseArgs,
+  parseCliArgs,
+  applySchemaFromObject,
+  readValueAfterFlag,
+  buildHelp,
+  parseBooleanFlagValue,
+};

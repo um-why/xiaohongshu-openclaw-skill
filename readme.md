@@ -4,7 +4,7 @@
 
 **只读公开数据 · 不登录你的小红书账号 · 按量最多 1 万条；包月搜索 / 作品 / 评论分别最多 40 / 30 / 20 · 装进 Agent 就能用口语化指令获取数据**
 
-**维护状态**：持续更新中，当前版本 `1.2.3`，[更新日志](references/changelog.md)。Agent 执行卡见 [SKILL.md](SKILL.md)。
+**维护状态**：持续更新中，当前版本 `1.2.4`，[更新日志](references/changelog.md)。Agent 执行卡见 [SKILL.md](SKILL.md)。
 
 👉 开通 [小红书数据 TOKEN](https://www.guaikei.com)
 
@@ -182,7 +182,7 @@ node src/xiaohongshu/post-cli.js --url "https://www.xiaohongshu.com/user/profile
     "limit": 20
   },
   "metadata": {
-    "skill_version": "1.2.3",
+    "skill_version": "1.2.4",
     "runtime_version": "22.x",
     "execution_time": 34210
   },
